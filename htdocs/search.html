@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Page</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .header {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 24px;
+            position: sticky;
+            top: 0;
+        }
+        .menu-icon {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            font-size: 24px;
+        }
+        .search-container {
+            padding: 20px;
+        }
+        .search-container input, .search-container select {
+            width: calc(100% - 40px);
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 18px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .results {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            padding: 10px;
+        }
+        .result-card {
+            background-color: white;
+            width: 30%;
+            margin: 10px 0;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            text-align: center;
+        }
+        .result-card img {
+            width: 100%;
+            height: auto;
+        }
+        .result-card h4, .result-card p, .result-card span {
+            margin: 5px 0;
+        }
+        .sidebar {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #333;
+            color: white;
+            padding-top: 20px;
+        }
+        .sidebar img {
+            width: 100%;
+            max-height: 30vh;
+        }
+        .sidebar p {
+            text-align: center;
+            margin: 0;
+            padding: 10px 0;
+        }
+        .sidebar a {
+            padding: 10px 15px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #ff8c00;
+            display: block;
+        }
+        .sidebar a:hover {
+            background-color: #575757;
+        }
+        .sidebar i {
+            margin-right: 10px;
+        }
+        /* The side navigation menu */
+        .sidebar {
+            height: 100%; /* 100% Full-height */
+            width: 0; /* 0 width - change this with JavaScript */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Stay on top */
+            top: 0; /* Stay at the top */
+            left: 0;
+            background-color: #111; /* Black*/
+            overflow-x: hidden; /* Disable horizontal scroll */
+            transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+        }
+        #mask {
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+            right: -100vw;
+            z-index: 990;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        .item-card {
+            background-color: #a9a9a9;
+            margin: 1em;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: calc(98% - 3em);
+            top: 0;
+            left: 0;
+            display: none;
+            z-index: 1000;
+        }
+        .item-card img {
+            width: 100px;
+            height: 150px;
+            float: left;
+            margin-right: 20px;
+        }
+        .item-details {
+            overflow: hidden;
+        }
+        .item-details h2 {
+            margin: 0 0 10px;
+        }
+        .item-details p {
+            margin: 5px 0;
+        }
+        .buttons {
+            margin: 20px 0;
+        }
+        .buttons button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .rent-button {
+            background-color: #007bff;
+            color: white;
+        }
+        .wishlist-button {
+            background-color: #28a745;
+            color: white;
+        }
+        .tabs {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .tabs button {
+            background-color: white;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            padding: 10px;
+            cursor: pointer;
+            flex-grow: 1;
+            margin: 0 5px;
+            font-size: 16px;
+        }
+        .tabs button:hover {
+            background-color: #007bff;
+            color: white;
+        }
+        .plot {
+            margin-top: 20px;
+        }
+        .item-back {
+            z-index: 990;
+            background-color: rgba(0, 0, 0, 0.4);
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            position: fixed;
+            top: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="menu" class="sidebar">
+        <img src="https://via.placeholder.com/250x150" alt="Image">
+        <p>demo</p>
+        <a href="#home"><i class="fas fa-home"></i> Home</a>
+        <a href="#browse"><i class="fas fa-film"></i> Browse Movies</a>
+        <a href="#search"><i class="fas fa-search"></i> Search</a>
+        <!-- Only admin can add movie else hide add movie -->
+        <a href="#upload"><i class="fas fa-upload"></i> Add Movie</a>
+        <a href="#logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+    <div id="mask" onclick="closeNav()"></div>
+
+    <div class="header">
+        <span class="menu-icon" onclick="openNav()">☰</span>
+        Search
+    </div>
+
+    <div class="search-container">
+        <input type="text" placeholder="Enter Keyword">
+        <select>
+            <option>Search by Categories</option>
+            <option>Science Fiction</option>
+            <option>Action</option>
+            <option>Drama</option>
+        </select>
+    </div>
+
+    <div class="results">
+        <div class="result-card">
+            <img src="https://via.placeholder.com/150" alt="Movie Poster">
+            <h4>Star Wars A New Hope</h4>
+            <p>Science Fiction</p>
+            <p>1977</p>
+            <span>HKD $20</span>
+        </div>
+        <div class="result-card">
+            <img src="https://via.placeholder.com/150" alt="Movie Poster">
+            <h4>Blade Runner</h4>
+            <p>Science Fiction</p>
+            <p>1982</p>
+            <span>HKD $20</span>
+        </div>
+        <div class="result-card">
+            <img src="https://via.placeholder.com/150" alt="Movie Poster">
+            <h4>Elysium</h4>
+            <p>Science Fiction</p>
+            <p>2013</p>
+            <span>HKD $40</span>
+        </div>
+    </div>
+
+    <div class="item-back">
+    </div>
+    <div class="item-card">
+        <img src="https://via.placeholder.com/100x150" alt="Blade Runner">
+        <div class="item-details">
+            <h2>Blade Runner</h2>
+            <p><strong>Directed by:</strong> Ridley Scott</p>
+            <p><strong>Starring:</strong> Harrison Ford</p>
+        </div>
+        <div class="buttons">
+            <button class="rent-button">Rent now for $20</button>
+            <button class="wishlist-button">+ Add to wishlist</button>
+        </div>
+        <div class="tabs">
+            <button>Details</button>
+            <button>Staffs</button>
+            <button>Review</button>
+        </div>
+        <div class="plot">
+            <p><strong>Plot:</strong></p>
+            <!-- Plot details go here -->
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Show overlay and login form
+            $('.result-card').click(function() {
+                $('.item-card').fadeIn();
+                $('.item-back').fadeIn();
+            });
+            // Show overlay and login form
+            $('.item-back').click(function() {
+                $('.item-card').fadeOut();
+                $('.item-back').fadeOut();
+            });
+        });
+    </script>
+
+    <script type="text/javascript">
+         /* Set the width of the side navigation to 250px and the left margin of the page content to 250px and add a black background color to body */
+        function openNav() {
+            document.getElementById("mask").style.right = "0";
+            document.getElementById("menu").style.width = "80%";
+            document.body.style.backgroundColor = "rgba(0,0,0,0.4)";
+        }
+
+        /* Set the width of the side navigation to 0 and the left margin of the page content to 0, and the background color of body to white */
+        function closeNav() {
+            document.getElementById("mask").style.right = "-100vw";
+            document.getElementById("menu").style.width = "0";
+            document.body.style.backgroundColor = "white";
+        }
+
+        var touchstartX = 0;
+        var touchstartY = 0;
+
+        document.getElementById("menu").addEventListener('touchstart', function (event) {
+            touchstartX = event.changedTouches[0].screenX;
+            touchstartY = event.changedTouches[0].screenY;
+        }, false);
+
+        document.getElementById("menu").addEventListener('touchend', function (event) {
+            touchendX = event.changedTouches[0].screenX;
+            touchendY = event.changedTouches[0].screenY;
+            handleGesture();
+        }, false);
+
+
+        function handleGesture() {
+            if (touchendX < touchstartX) {
+                closeNav();
+            }
+
+            if (touchendX > touchstartX) {
+                console.log('Swiped Right');
+            }
+
+            if (touchendY < touchstartY) {
+                console.log('Swiped Up');
+            }
+
+            if (touchendY > touchstartY) {
+                console.log('Swiped Down');
+            }
+
+            if (touchendY === touchstartY) {
+                console.log('Tap');
+            }
+        }
+    </script>
+
+</body>
+</html>

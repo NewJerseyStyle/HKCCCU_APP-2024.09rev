@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item Page</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            color: #333;
+        }
+        .header {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 24px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .menu-icon {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            font-size: 24px;
+        }
+        .item-card {
+            background-color: #a9a9a9;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            display: none;
+            z-index: 1000;
+        }
+        .item-card img {
+            width: 100px;
+            height: 150px;
+            float: left;
+            margin-right: 20px;
+        }
+        .item-details {
+            overflow: hidden;
+        }
+        .item-details h2 {
+            margin: 0 0 10px;
+        }
+        .item-details p {
+            margin: 5px 0;
+        }
+        .buttons {
+            margin: 20px 0;
+        }
+        .buttons button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .rent-button {
+            background-color: #007bff;
+            color: white;
+        }
+        .wishlist-button {
+            background-color: #28a745;
+            color: white;
+        }
+        .tabs {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .tabs button {
+            background-color: white;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            padding: 10px;
+            cursor: pointer;
+            flex-grow: 1;
+            margin: 0 5px;
+            font-size: 16px;
+        }
+        .tabs button:hover {
+            background-color: #007bff;
+            color: white;
+        }
+        .plot {
+            margin-top: 20px;
+        }
+        .item-back {
+            z-index: 990;
+            background-color: rgba(0, 0, 0, 0.4);
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            position: fixed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <span class="menu-icon">☰</span>
+        Search
+    </div>
+
+    <div class="item-back">
+    </div>
+    <div class="item-card">
+        <img src="https://via.placeholder.com/100x150" alt="Blade Runner">
+        <div class="item-details">
+            <h2>Blade Runner</h2>
+            <p><strong>Directed by:</strong> Ridley Scott</p>
+            <p><strong>Starring:</strong> Harrison Ford</p>
+        </div>
+        <div class="buttons">
+            <button class="rent-button">Rent now for $20</button>
+            <button class="wishlist-button">+ Add to wishlist</button>
+        </div>
+        <div class="tabs">
+            <button>Details</button>
+            <button>Staffs</button>
+            <button>Review</button>
+        </div>
+        <div class="plot">
+            <p><strong>Plot:</strong></p>
+            <!-- Plot details go here -->
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Show overlay and login form
+            $('.menu-icon').click(function() {
+                $('.item-card').fadeIn();
+                $('.item-back').fadeIn();
+            });
+            // Show overlay and login form
+            $('.item-back').click(function() {
+                $('.item-card').fadeOut();
+                $('.item-back').fadeOut();
+            });
+        });
+    </script>
+
+</body>
+</html>

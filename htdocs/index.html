@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #fff;
+        }
+        .header {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 24px;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+        .menu-icon {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            font-size: 24px;
+        }
+        .section {
+            position: relative;
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .section img {
+            width: 100%;
+            height: auto;
+            opacity: 0.7;
+        }
+        .section-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .section-content h2 {
+            margin: 5px 0;
+        }
+        .section-content p {
+            margin: 5px 0;
+        }
+        .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .sidebar {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #333;
+            color: white;
+            padding-top: 20px;
+        }
+        .sidebar img {
+            width: 100%;
+            max-height: 30vh;
+        }
+        .sidebar p {
+            text-align: center;
+            margin: 0;
+            padding: 10px 0;
+        }
+        .sidebar a {
+            padding: 10px 15px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #ff8c00;
+            display: block;
+        }
+        .sidebar a:hover {
+            background-color: #575757;
+        }
+        .sidebar i {
+            margin-right: 10px;
+        }
+        /* The side navigation menu */
+        .sidebar {
+            height: 100%; /* 100% Full-height */
+            width: 0; /* 0 width - change this with JavaScript */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Stay on top */
+            top: 0; /* Stay at the top */
+            left: 0;
+            background-color: #111; /* Black*/
+            overflow-x: hidden; /* Disable horizontal scroll */
+            transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+        }
+        #mask {
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+            right: -100vw;
+            z-index: 990;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="menu" class="sidebar">
+        <img src="https://via.placeholder.com/250x150" alt="Image">
+        <p>demo</p>
+        <a href="#home"><i class="fas fa-home"></i> Home</a>
+        <a href="#browse"><i class="fas fa-film"></i> Browse Movies</a>
+        <a href="#search"><i class="fas fa-search"></i> Search</a>
+        <!-- Only admin can add movie else hide add movie -->
+        <a href="#upload"><i class="fas fa-upload"></i> Add Movie</a>
+        <a href="#logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+    <div id="mask" onclick="closeNav()"></div>
+
+    <div class="header">
+        <span class="menu-icon" onclick="openNav()">☰</span>
+        HOME
+    </div>
+
+    <!-- Font Awesome for icons -->
+    <script src="https://kit.fontawesome.com/6d2429c580.js"></script>
+
+    <div class="section">
+        <img src="https://via.placeholder.com/800x400" alt="New Arrivals">
+        <div class="section-content">
+            <p>2015 October</p>
+            <h2>New Arrivals</h2>
+            <p>Check out what's new</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <img src="https://via.placeholder.com/800x400" alt="Search">
+        <div class="section-content">
+            <span class="icon">🔍</span>
+            <h2>Search</h2>
+        </div>
+    </div>
+
+    <div class="section">
+        <img src="https://via.placeholder.com/800x400" alt="Browse Movies">
+        <div class="section-content">
+            <span class="icon">🎬</span>
+            <h2>Browse Movies</h2>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+         /* Set the width of the side navigation to 250px and the left margin of the page content to 250px and add a black background color to body */
+        function openNav() {
+            document.getElementById("mask").style.right = "0";
+            document.getElementById("menu").style.width = "80%";
+            document.body.style.backgroundColor = "rgba(0,0,0,0.4)";
+        }
+
+        /* Set the width of the side navigation to 0 and the left margin of the page content to 0, and the background color of body to white */
+        function closeNav() {
+            document.getElementById("mask").style.right = "-100vw";
+            document.getElementById("menu").style.width = "0";
+            document.body.style.backgroundColor = "white";
+        }
+
+        var touchstartX = 0;
+        var touchstartY = 0;
+
+        document.getElementById("menu").addEventListener('touchstart', function (event) {
+            touchstartX = event.changedTouches[0].screenX;
+            touchstartY = event.changedTouches[0].screenY;
+        }, false);
+
+        document.getElementById("menu").addEventListener('touchend', function (event) {
+            touchendX = event.changedTouches[0].screenX;
+            touchendY = event.changedTouches[0].screenY;
+            handleGesture();
+        }, false);
+
+
+        function handleGesture() {
+            if (touchendX < touchstartX) {
+                closeNav();
+            }
+
+            if (touchendX > touchstartX) {
+                console.log('Swiped Right');
+            }
+
+            if (touchendY < touchstartY) {
+                console.log('Swiped Up');
+            }
+
+            if (touchendY > touchstartY) {
+                console.log('Swiped Down');
+            }
+
+            if (touchendY === touchstartY) {
+                console.log('Tap');
+            }
+        }
+    </script>
+
+</body>
+</html>
