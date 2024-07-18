@@ -2,10 +2,16 @@
 #[macro_use] extern crate serde;
 use rocket::fs::NamedFile;
 use rocket::get;
+use rocket::post;
 use rocket::request::Form;
 use chrono::NaiveDate;
 use validator::{validate, Validate};
 use regex::Regex;
+use diesel::prelude::*;
+use diesel::mysql::MysqlConnection;
+
+mod diesel;
+mod schema;
 
 #[derive(Serialize, Deserialize)]
 struct UserLogin {
@@ -56,38 +62,73 @@ fn index() -> &'static str {
 }
 
 #[get("/search/<name>")]
-fn search(name: &str) -> &'static str {
-    "Hello, world!"
+fn search(name: &str, conn: diesel::mysql::MysqlConnection) -> String {
+    use models::movies::dsl::*;
+    let results = movies.filter(title.like(format!("%{}%", name))).load::<models::Movie>(&conn).unwrap();
+    let mut response = "Search results:\n".to_string();
+    for movie in results {
+        response.push_str(&format!("{} - {}\n", movie.title, movie.director));
+    }
+    response
 }
 
 #[get("/browse/<id>")]
-fn browse(id: &int) -> &'static str {
-    "Hello, world!"
+fn browse(id: i32, conn: diesel::mysql::MysqlConnection) -> String {
+    use models::movies::dsl::*;
+    let movie = movies.find(id).first::<models::Movie>(&conn).unwrap();
+    format!("Movie {} - {}", movie.title, movie.director)
 }
 
 #[post("/wish-item/<movie_id>")]
-fn wish_item(movie_id: &int) -> String {
-    format!("Hello, {}!", login.name)
+fn wish_item(movie_id: i32, conn: diesel::mysql::MysqlConnection, login: Form<UserLogin>) -> String {
+    use models::user_wishes::dsl::*;
+    let wish = models::UserWish {
+        user_id: 1, // placeholder, should be the actual user ID
+        movie_id,
+    };
+    diesel::insert_into(user_wishes)
+        .values(&wish)
+        .execute(&conn)
+        .unwrap();
+    format!("Wish added for {}", login.name)
 }
 
 #[post("/rent-item", data = "<item>")]
-fn rent_item(item: Form<MovieRentalRecord>) -> String {
-    format!("Hello, {}!", item.name)
+fn rent_item(item: Form<MovieRentalRecord>, conn: diesel::mysql::MysqlConnection) -> String {
+    diesel::insert_into(models::movie_rentals::table)
+        .values(&item.into_inner())
+        .execute(&conn)
+        .unwrap();
+    format!("Rental added for {}", item.user_id)
 }
 
 #[post("/add-item", data = "<item>")]
-fn add_item(item: Form<MovieRecord>) -> String {
-    format!("Hello, {}!", item.name)
+fn add_item(item: Form<MovieRecord>, conn: diesel::mysql::MysqlConnection) -> String {
+    diesel::insert_into(models::movies::table)
+        .values(&item.into_inner())
+        .execute(&conn)
+        .unwrap();
+    format!("Movie added: {}", item.title)
 }
 
 #[post("/register", data = "<data>")]
-fn register(data: Form<UserRegistration>) -> String {
-    format!("Hello, {}!", data.name)
+fn register(data: Form<UserRegistration>, conn: diesel::mysql::MysqlConnection) -> String {
+    diesel::insert_into(models::users::table)
+        .values(&data.into_inner())
+        .execute(&conn)
+        .unwrap();
+    format!("User registered: {}", data.name)
 }
 
 #[post("/login", data = "<login>")]
-fn login(login: Form<UserLogin>) -> String {
-    format!("Hello, {}!", login.name)
+fn login(login: Form<UserLogin>, conn: diesel::mysql::MysqlConnection) -> String {
+    use models::users::dsl::*;
+    let user = users.filter(name.eq(&login.name)).first::<models::User>(&conn).unwrap();
+    if user.password == login.password {
+        format!("Welcome, {}!", login.name)
+    } else {
+        "Invalid password".to_string()
+    }
 }
 
 #[get("/home")]
@@ -105,10 +146,11 @@ async fn serve_search() -> Result<NamedFile, std::io::Error> {
     NamedFile::open("htdocs/search.html").await
 }
 
-
 #[launch]
 fn rocket() -> _ {
+    let conn = diesel::establish_connection();
     rocket::build().mount("/api", routes![index, search, browse,
-                                          add_item, rent_item, wish_item])
+                                          add_item, rent_item, wish_item,
+                                          login, register])
     rocket::build().mount("/", routes![serve_index, serve_login, serve_search])
 }
