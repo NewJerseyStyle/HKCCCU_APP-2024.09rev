@@ -86,17 +86,16 @@
         .sidebar i {
             margin-right: 10px;
         }
-        /* The side navigation menu */
         .sidebar {
-            height: 100%; /* 100% Full-height */
-            width: 0; /* 0 width - change this with JavaScript */
-            position: fixed; /* Stay in place */
-            z-index: 1000; /* Stay on top */
-            top: 0; /* Stay at the top */
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1000;
+            top: 0;
             left: 0;
-            background-color: #111; /* Black*/
-            overflow-x: hidden; /* Disable horizontal scroll */
-            transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+            background-color: #111;
+            overflow-x: hidden;
+            transition: 0.5s;
         }
         #mask {
             height: 100vh;
@@ -116,7 +115,6 @@
         <a href="#home"><i class="fas fa-home"></i> Home</a>
         <a href="#browse"><i class="fas fa-film"></i> Browse Movies</a>
         <a href="#search"><i class="fas fa-search"></i> Search</a>
-        <!-- Only admin can add movie else hide add movie -->
         <a href="#upload"><i class="fas fa-upload"></i> Add Movie</a>
         <a href="#logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
@@ -127,13 +125,10 @@
         HOME
     </div>
 
-    <!-- Font Awesome for icons -->
-    <script src="https://kit.fontawesome.com/6d2429c580.js"></script>
-
     <div class="section">
         <img src="https://via.placeholder.com/800x400" alt="New Arrivals">
         <div class="section-content">
-            <p>2015 October</p>
+            <p>2024 July</p>
             <h2>New Arrivals</h2>
             <p>Check out what's new</p>
         </div>
@@ -144,6 +139,9 @@
         <div class="section-content">
             <span class="icon">🔍</span>
             <h2>Search</h2>
+            <input type="text" id="searchInput" placeholder="Search for movies...">
+            <button onclick="searchMovies()">Search</button>
+            <div id="searchResults"></div>
         </div>
     </div>
 
@@ -152,61 +150,70 @@
         <div class="section-content">
             <span class="icon">🎬</span>
             <h2>Browse Movies</h2>
-        </div>
+        </```html
+        <button onclick="fetchMovies()">Browse</button>
+        <div id="movieList"></div>
     </div>
+</div>
 
-    <script type="text/javascript">
-         /* Set the width of the side navigation to 250px and the left margin of the page content to 250px and add a black background color to body */
-        function openNav() {
-            document.getElementById("mask").style.right = "0";
-            document.getElementById("menu").style.width = "80%";
-            document.body.style.backgroundColor = "rgba(0,0,0,0.4)";
-        }
+<div class="section">
+    <img src="https://via.placeholder.com/800x400" alt="Upload">
+    <div class="section-content">
+        <span class="icon">⬆️</span>
+        <h2>Add a Movie</h2>
+        <form id="uploadForm" onsubmit="uploadMovie(event)">
+            <input type="text" id="movieTitle" placeholder="Movie Title" required>
+            <input type="text" id="movieGenre" placeholder="Genre" required>
+            <button type="submit">Upload</button>
+        </form>
+        <div id="uploadMessage"></div>
+    </div>
+</div>
 
-        /* Set the width of the side navigation to 0 and the left margin of the page content to 0, and the background color of body to white */
-        function closeNav() {
-            document.getElementById("mask").style.right = "-100vw";
-            document.getElementById("menu").style.width = "0";
-            document.body.style.backgroundColor = "white";
-        }
+<script>
+    function openNav() {
+        document.getElementById("menu").style.width = "250px";
+        document.getElementById("mask").style.right = "0";
+    }
 
-        var touchstartX = 0;
-        var touchstartY = 0;
+    function closeNav() {
+        document.getElementById("menu").style.width = "0";
+        document.getElementById("mask").style.right = "-100vw";
+    }
 
-        document.getElementById("menu").addEventListener('touchstart', function (event) {
-            touchstartX = event.changedTouches[0].screenX;
-            touchstartY = event.changedTouches[0].screenY;
-        }, false);
+    async function searchMovies() {
+        const query = document.getElementById('searchInput').value;
+        const response = await fetch(`http://127.0.0.1:8000/search?query=${query}`);
+        const results = await response.json();
+        const searchResultsDiv = document.getElementById('searchResults');
+        searchResultsDiv.innerHTML = results.map(movie => `<p>${movie.title} - ${movie.genre}</p>`).join('');
+    }
 
-        document.getElementById("menu").addEventListener('touchend', function (event) {
-            touchendX = event.changedTouches[0].screenX;
-            touchendY = event.changedTouches[0].screenY;
-            handleGesture();
-        }, false);
+    async function fetchMovies() {
+        const response = await fetch('http://127.0.0.1:8000/movies');
+        const movies = await response.json();
+        const movieListDiv = document.getElementById('movieList');
+        movieListDiv.innerHTML = movies.map(movie => `<p>${movie.title} - ${movie.genre}</p>`).join('');
+    }
 
+    async function uploadMovie(event) {
+        event.preventDefault();
+        const title = document.getElementById('movieTitle').value;
+        const genre = document.getElementById('movieGenre').value;
 
-        function handleGesture() {
-            if (touchendX < touchstartX) {
-                closeNav();
-            }
+        const response = await fetch('http://127.0.0.1:8000/upload', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ title, genre }),
+        });
 
-            if (touchendX > touchstartX) {
-                console.log('Swiped Right');
-            }
-
-            if (touchendY < touchstartY) {
-                console.log('Swiped Up');
-            }
-
-            if (touchendY > touchstartY) {
-                console.log('Swiped Down');
-            }
-
-            if (touchendY === touchstartY) {
-                console.log('Tap');
-            }
-        }
-    </script>
+        const result = await response.json();
+        const uploadMessageDiv = document.getElementById('uploadMessage');
+        uploadMessageDiv.innerText = result.message;
+    }
+</script>
 
 </body>
 </html>
