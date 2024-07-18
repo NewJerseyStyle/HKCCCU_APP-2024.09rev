@@ -271,12 +271,64 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Show overlay and login form
-            $('.result-card').click(function() {
-                $('.item-card').fadeIn();
-                $('.item-back').fadeIn();
+        $(document).ready(function() {
+            // Function to fetch data from API and update the result cards
+            function fetchResults(query = '', category = '') {
+                $.ajax({
+                    url: 'https://api.example.com/movies', // Replace with your API endpoint
+                    method: 'GET',
+                    data: {
+                        query: query,
+                        category: category
+                    },
+                    success: function(response) {
+                        // Clear existing results
+                        $('#results').empty();
+
+                        // Loop through the response data and create result cards
+                        response.data.forEach(function(movie) {
+                            const card = `
+                                <div class="result-card">
+                                    <img src="${movie.poster}" alt="${movie.title}">
+                                    <h4>${movie.title}</h4>
+                                    <p>${movie.genre}</p>
+                                    <p>${movie.year}</p>
+                                    <span>HKD $${movie.price}</span>
+                                </div>
+                            `;
+                            $('#results').append(card);
+                        });
+
+                        // Attach click event to new result cards
+                        $('.result-card').click(function() {
+                            // Populate item card with selected movie details
+                            const movie = response.data[$(this).index()];
+                            $('.item-card img').attr('src', movie.poster);
+                            $('.item-card h2').text(movie.title);
+                            $('.item-card .item-details p').eq(0).html(`<strong>Directed by:</strong> ${movie.director}`);
+                            $('.item-card .item-details p').eq(1).html(`<strong>Starring:</strong> ${movie.stars}`);
+                            $('.item-card .rent-button').text(`Rent now for $${movie.price}`);
+                            $('.item-card .plot').html(`<p><strong>Plot:</strong></p><p>${movie.plot}</p>`);
+
+                            // Show item card and overlay
+                            $('.item-card').fadeIn();
+                            $('.item-back').fadeIn();
+                        });
+                    }
+                });
+            }
+
+            // Initial fetch of results (e.g., on page load)
+            fetchResults();
+
+            // Search functionality
+            $('.search-container input, .search-container select').on('input change', function() {
+                const query = $('.search-container input').val();
+                const category = $('.search-container select').val();
+                fetchResults(query, category);
             });
-            // Show overlay and login form
+
+            // Hide overlay and item card
             $('.item-back').click(function() {
                 $('.item-card').fadeOut();
                 $('.item-back').fadeOut();
