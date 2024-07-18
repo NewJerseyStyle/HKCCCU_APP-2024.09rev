@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 rocket = "0.5.1"
-diesel = { version = "2.2.0", features = ["postgres"] }
+diesel = { version = "2.2.0", features = ["mysql"] }
 dotenvy = "0.15"
