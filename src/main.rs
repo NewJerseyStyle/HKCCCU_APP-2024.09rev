@@ -1,5 +1,5 @@
 #[macro_use] extern crate rocket;
-#[macro_use] extern crate diesel;
+// #[macro_use] extern crate diesel;
 use rocket::serde::json::Json;
 use rocket::http::Status;
 use rocket::State;
@@ -37,9 +37,9 @@ pub struct UserRegistration {
     gender_description: Option<String>,
 }
 
-fn validate_password(password: &str) -> Result<(), ValidationError> {
-    let re = regex::Regex::new(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$").unwrap();
-    if re.is_match(password) {
+fn validate_password(password: &String) -> Result<(), ValidationError> {
+    let re = Regex::new(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$").unwrap();
+    if re.is_match(password.as_str()) {
         Ok(())
     } else {
         Err(ValidationError::new("Password does not meet requirements"))
@@ -90,7 +90,7 @@ async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec
     })))?;
 
     use schema::Movies::dsl::*;
-    let results = movies.filter(title.like(format!("%{}%", name)))
+    let results = Movies.filter(Title.like(format!("%{}%", name)))
         .load::<models::Movie>(&conn)
         .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
             status: "error".to_string(),
@@ -114,7 +114,7 @@ async fn browse(id: i32, pool: &State<DbPool>) -> Result<Json<ApiResponse<models
     })))?;
 
     use schema::Movies::dsl::*;
-    let movie = movies.find(id)
+    let movie = Movies.find(id)
         .first::<models::Movie>(&conn)
         .map_err(|_| Custom(Status::NotFound, Json(ApiResponse {
             status: "error".to_string(),
@@ -143,7 +143,7 @@ async fn wish_item(movie_id: i32, pool: &State<DbPool>, claims: Claims) -> Resul
         movie_id,
     };
 
-    diesel::insert_into(user_wishlist)
+    diesel::insert_into(UserWishlist)
         .values(&wish)
         .execute(&conn)
         .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
@@ -167,7 +167,7 @@ async fn rent_item(item: Json<MovieRentalRecord>, pool: &State<DbPool>, _claims:
         message: Some("Database connection error".to_string()),
     })))?;
 
-    diesel::insert_into(schema::Movies_rental_records::table)
+    diesel::insert_into(schema::MovieRentalRecords::table)
         .values(&item.into_inner())
         .execute(&conn)
         .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
@@ -205,7 +205,7 @@ async fn register(data: Json<UserRegistration>, pool: &State<DbPool>) -> Result<
         message: Some("Password hashing error".to_string()),
     })))?;
 
-    let new_user = models::NewUser {
+    let new_user = models::User {
         username: &data.username,
         password_hash: &hashed_password,
         email: &data.email,
@@ -238,7 +238,7 @@ async fn login(login: Json<UserLogin>, pool: &State<DbPool>) -> Result<Json<ApiR
     })))?;
 
     use schema::Users::dsl::*;
-    let user = users.filter(username.eq(&login.username))
+    let user = users.filter(Username.eq(&login.username))
         .first::<models::User>(&conn)
         .map_err(|_| Custom(Status::Unauthorized, Json(ApiResponse {
             status: "error".to_string(),
