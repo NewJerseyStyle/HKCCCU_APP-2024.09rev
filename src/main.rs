@@ -76,10 +76,10 @@ impl<'r> FromRequest<'r> for Claims {
                 let key = DecodingKey::from_secret(secret.as_bytes());
                 match decode::<Claims>(token, &key, &Validation::default()) {
                     Ok(token_data) => Outcome::Success(token_data.claims),
-                    Err(_) => Outcome::Failure((Status::Unauthorized, ())),
+                    Err(_) => Outcome::Error((Status::Unauthorized, ())),
                 }
             }
-            _ => Outcome::Failure((Status::Unauthorized, ())),
+            _ => Outcome::Error((Status::Unauthorized, ())),
         }
     }
 }
