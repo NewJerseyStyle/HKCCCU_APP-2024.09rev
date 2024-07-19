@@ -6,11 +6,14 @@ use diesel::mysql::Mysql;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
-impl FromSql<diesel::sql_types::Numeric, Mysql> for Decimal {
+pub struct SqlDecimal(pub rust_decimal::Decimal);
+
+impl FromSql<diesel::sql_types::Numeric, Mysql> for SqlDecimal {
     fn from_sql(bytes: Option<&[u8]>) -> diesel::deserialize::Result<Self> {
         let bytes = not_none!(bytes);
         let s = std::str::from_utf8(bytes)?;
-        Decimal::from_str(s).map_err(|_| "Invalid Decimal".into())
+        let decimal = rust_decimal::Decimal::from_str(s).map_err(|_| "Invalid Decimal".into())?;
+        Ok(SqlDecimal(decimal))
     }
 }
 
@@ -55,7 +58,7 @@ pub struct MovieRentalRecord {
     pub MovieID: i32,
     pub RentalDate: NaiveDate,
     pub ReturnDate: Option<NaiveDate>,
-    pub RentalPrice: Decimal,
+    pub RentalPrice: SqlDecimal,
 }
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
