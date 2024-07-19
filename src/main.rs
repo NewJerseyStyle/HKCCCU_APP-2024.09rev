@@ -1,4 +1,5 @@
 #[macro_use] extern crate rocket;
+#[macro_use] extern crate diesel;
 #[macro_use] extern crate serde;
 use rocket::fs::NamedFile;
 use rocket::get;
@@ -7,10 +8,10 @@ use rocket::request::Form;
 use chrono::NaiveDate;
 use validator::{validate, Validate};
 use regex::Regex;
-use diesel;
 use diesel::prelude::*;
 use diesel::mysql::MysqlConnection;
 
+// use diesel;
 mod schema;
 mod models;
 
