@@ -10,9 +10,6 @@ use diesel::row::NamedRow;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
-// #[derive(Debug, Serialize, Deserialize)]
-// pub struct SqlDecimal(pub Decimal);
-
 // impl FromSql<diesel::sql_types::Numeric, Mysql> for SqlDecimal {
 //     fn from_sql(bytes: Option<&[u8]>) -> diesel::deserialize::Result<Self> {
 //         let bytes = not_none!(bytes);
@@ -22,7 +19,7 @@ use serde::{Deserialize, Serialize};
 //     }
 // }
 
-#[derive(Debug, Clone, FromSqlRow, AsExpression)]
+#[derive(Debug, Serialize, Deserialize, Clone, FromSqlRow, AsExpression)]
 #[diesel(sql_type = Numeric)]
 pub struct SqlDecimal(pub Decimal);
 
