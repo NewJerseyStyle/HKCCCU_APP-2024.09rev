@@ -2,7 +2,6 @@ use std::str::FromStr;
 use chrono::{NaiveDate, NaiveDateTime};
 use diesel::prelude::*;
 use diesel::mysql::{Mysql, MysqlValue};
-use diesel::sql_types::Numeric;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
@@ -47,7 +46,7 @@ pub struct MovieRentalRecord {
     pub MovieID: i32,
     pub RentalDate: NaiveDate,
     pub ReturnDate: Option<NaiveDate>,
-    pub RentalPrice: Numeric,
+    pub RentalPrice: Decimal,
 }
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
@@ -60,7 +59,7 @@ pub struct Movie {
     pub Starring: String,
     pub Details: Option<String>,
     pub Staffs: Option<String>,
-    pub RentalPrice: Option<Numeric>,
+    pub RentalPrice: Option<Decimal>,
 }
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
@@ -94,7 +93,7 @@ pub struct Review {
     pub ReviewID: i32,
     pub UserID: Option<i32>,
     pub MovieID: Option<i32>,
-    pub Rating: Option<Numeric>,
+    pub Rating: Option<Decimal>,
     pub ReviewText: Option<String>,
     pub CreatedAt: Option<NaiveDateTime>,
     pub UpdatedAt: Option<NaiveDateTime>,
