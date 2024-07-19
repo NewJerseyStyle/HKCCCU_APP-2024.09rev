@@ -89,7 +89,7 @@ async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec
         message: Some("Database connection error".to_string()),
     })))?;
 
-    use schema::movies::dsl::*;
+    use schema::Movie::dsl::*;
     let results = movies.filter(title.like(format!("%{}%", name)))
         .load::<models::Movie>(&conn)
         .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
@@ -113,7 +113,7 @@ async fn browse(id: i32, pool: &State<DbPool>) -> Result<Json<ApiResponse<models
         message: Some("Database connection error".to_string()),
     })))?;
 
-    use schema::movies::dsl::*;
+    use schema::Movie::dsl::*;
     let movie = movies.find(id)
         .first::<models::Movie>(&conn)
         .map_err(|_| Custom(Status::NotFound, Json(ApiResponse {
@@ -137,7 +137,7 @@ async fn wish_item(movie_id: i32, pool: &State<DbPool>, claims: Claims) -> Resul
         message: Some("Database connection error".to_string()),
     })))?;
 
-    use schema::user_wishlist::dsl::*;
+    use schema::UserWishlist::dsl::*;
     let wish = models::UserWishlist {
         user_id: claims.sub.parse().unwrap(),
         movie_id,
@@ -213,7 +213,7 @@ async fn register(data: Json<UserRegistration>, pool: &State<DbPool>) -> Result<
         gender_description: data.gender_description.as_deref(),
     };
 
-    diesel::insert_into(schema::users::table)
+    diesel::insert_into(schema::User::table)
         .values(&new_user)
         .execute(&conn)
         .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
@@ -237,7 +237,7 @@ async fn login(login: Json<UserLogin>, pool: &State<DbPool>) -> Result<Json<ApiR
         message: Some("Database connection error".to_string()),
     })))?;
 
-    use schema::users::dsl::*;
+    use schema::User::dsl::*;
     let user = users.filter(username.eq(&login.username))
         .first::<models::User>(&conn)
         .map_err(|_| Custom(Status::Unauthorized, Json(ApiResponse {
