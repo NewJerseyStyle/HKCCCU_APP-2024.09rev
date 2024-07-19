@@ -87,7 +87,7 @@ struct ApiResponse<T> {
 
 #[get("/search/<name>")]
 async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec<models::Movie>>>, Custom<Json<ApiResponse<()>>>> {
-    let conn = &mut pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+    let conn = pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
         status: "error".to_string(),
         data: None,
         message: Some("Database connection error".to_string()),
@@ -97,7 +97,7 @@ async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec
     let results = Movies
         .filter(Title.like(format!("%{}%", name)))
         .select(models::Movie::as_select())
-        .load::<models::Movie>(conn)
+        .load::<models::Movie>(&conn)
         .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
             status: "error".to_string(),
             data: None,
