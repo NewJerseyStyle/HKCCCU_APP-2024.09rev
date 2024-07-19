@@ -14,13 +14,6 @@ use serde::{Deserialize, Serialize};
 #[diesel(sql_type = Numeric)]
 pub struct SqlDecimal(pub Decimal);
 
-impl FromSql<Numeric, Mysql> for SqlDecimal {
-    fn from_sql(value: MysqlValue) -> diesel::deserialize::Result<Self> {
-        let decimal = Decimal::from_sql(value)?;
-        Ok(SqlDecimal(decimal))
-    }
-}
-
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::Actors)]
 #[diesel(check_for_backend(diesel::mysql::Mysql))]
