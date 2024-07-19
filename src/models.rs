@@ -44,8 +44,17 @@ impl ToSql<Numeric, Mysql> for SqlDecimal {
 
 impl QueryableByName<Mysql> for SqlDecimal {
     fn build<R: NamedRow<Mysql>>(row: &R) -> diesel::deserialize::Result<Self> {
-        let decimal: Decimal = Decimal::build(row)?;
-        Ok(SqlDecimal(decimal))
+        // Assuming the column type is Numeric and you can extract it as i128 for example
+        let value: Option<i128> = row.get("your_column_name")?; // Replace with your actual column name
+
+        match value {
+            Some(v) => {
+                // Create a Decimal from the i128 value
+                let decimal = Decimal::from_i128_with_scale(v, 0).map_err(|_| diesel::deserialize::Error::Custom("Invalid Decimal"))?;
+                Ok(SqlDecimal(decimal))
+            }
+            None => Err(diesel::deserialize::Error::Custom("Value is null")),
+        }
     }
 }
 
