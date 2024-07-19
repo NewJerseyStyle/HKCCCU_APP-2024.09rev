@@ -1,29 +1,33 @@
 #[macro_use] extern crate rocket;
 #[macro_use] extern crate diesel;
-#[macro_use] extern crate serde;
-use rocket::fs::NamedFile;
-use rocket::get;
-use rocket::post;
-use rocket::request::Form;
+use rocket::serde::json::Json;
+use rocket::http::Status;
+use rocket::State;
+use rocket::response::status::Custom;
 use chrono::NaiveDate;
-use validator::{validate, Validate};
-use regex::Regex;
+use validator::{Validate, ValidationError};
+use bcrypt::{hash, verify, DEFAULT_COST};
+use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
 use diesel::prelude::*;
-use diesel::mysql::MysqlConnection;
+use diesel::r2d2::{ConnectionManager, Pool};
+use dotenv::dotenv;
+use std::env;
 
-// use diesel;
 mod schema;
 mod models;
 
+type DbPool = Pool<ConnectionManager<MysqlConnection>>;
+
 #[derive(Serialize, Deserialize)]
 struct UserLogin {
-    name: String,
+    username: String,
     password: String,
 }
 
 #[derive(Serialize, Deserialize, Validate)]
 pub struct UserRegistration {
-    name: String,
+    #[validate(length(min = 3, max = 20))]
+    username: String,
     #[validate(custom = "validate_password")]
     password: String,
     #[validate(email)]
@@ -32,12 +36,12 @@ pub struct UserRegistration {
     gender_description: Option<String>,
 }
 
-fn validate_password(input: &String) -> Result<(), validator::ValidationFieldError> {
-    let re = Regex::new(r"^[0-9a-fA-F]{40}$").unwrap();
-    if re.is_match(input) {
+fn validate_password(password: &str) -> Result<(), ValidationError> {
+    let re = regex::Regex::new(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$").unwrap();
+    if re.is_match(password) {
         Ok(())
     } else {
-        Err(validator::ValidationFieldError::with_message("密码不符合规则", "password"))
+        Err(ValidationError::new("Password does not meet requirements"))
     }
 }
 
@@ -58,101 +62,230 @@ pub struct MovieRentalRecord {
     rental_date: NaiveDate
 }
 
-#[get("/")]
-fn index() -> &'static str {
-    "Hello, world!"
+#[derive(Debug, Serialize, Deserialize)]
+struct Claims {
+    sub: String,
+    exp: usize,
+}
+
+#[derive(Serialize)]
+struct LoginResponse {
+    token: String,
+}
+
+#[derive(Serialize)]
+struct ApiResponse<T> {
+    status: String,
+    data: Option<T>,
+    message: Option<String>,
 }
 
 #[get("/search/<name>")]
-fn search(name: &str, conn: diesel::mysql::MysqlConnection) -> String {
+async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec<models::Movie>>>, Custom<Json<ApiResponse<()>>>> {
+    let conn = pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+        status: "error".to_string(),
+        data: None,
+        message: Some("Database connection error".to_string()),
+    })))?;
+
     use schema::movies::dsl::*;
-    let results = movies.filter(title.like(format!("%{}%", name))).load::<models::Movie>(&conn).unwrap();
-    let mut response = "Search results:\n".to_string();
-    for movie in results {
-        response.push_str(&format!("{} - {}\n", movie.title, movie.director));
-    }
-    response
+    let results = movies.filter(title.like(format!("%{}%", name)))
+        .load::<models::Movie>(&conn)
+        .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+            status: "error".to_string(),
+            data: None,
+            message: Some("Database query error".to_string()),
+        })))?;
+
+    Ok(Json(ApiResponse {
+        status: "success".to_string(),
+        data: Some(results),
+        message: None,
+    }))
 }
 
 #[get("/browse/<id>")]
-fn browse(id: i32, conn: diesel::mysql::MysqlConnection) -> String {
+async fn browse(id: i32, pool: &State<DbPool>) -> Result<Json<ApiResponse<models::Movie>>, Custom<Json<ApiResponse<()>>>> {
+    let conn = pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+        status: "error".to_string(),
+        data: None,
+        message: Some("Database connection error".to_string()),
+    })))?;
+
     use schema::movies::dsl::*;
-    let movie = movies.find(id).first::<models::Movie>(&conn).unwrap();
-    format!("Movie {} - {}", movie.title, movie.director)
+    let movie = movies.find(id)
+        .first::<models::Movie>(&conn)
+        .map_err(|_| Custom(Status::NotFound, Json(ApiResponse {
+            status: "error".to_string(),
+            data: None,
+            message: Some("Movie not found".to_string()),
+        })))?;
+
+    Ok(Json(ApiResponse {
+        status: "success".to_string(),
+        data: Some(movie),
+        message: None,
+    }))
 }
 
 #[post("/wish-item/<movie_id>")]
-fn wish_item(movie_id: i32, conn: diesel::mysql::MysqlConnection, login: Form<UserLogin>) -> String {
-    use schema::user_wishes::dsl::*;
-    let wish = models::UserWish {
-        user_id: 1, // placeholder, should be the actual user ID
+async fn wish_item(movie_id: i32, pool: &State<DbPool>, claims: Claims) -> Result<Json<ApiResponse<()>>, Custom<Json<ApiResponse<()>>>> {
+    let conn = pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+        status: "error".to_string(),
+        data: None,
+        message: Some("Database connection error".to_string()),
+    })))?;
+
+    use schema::user_wishlist::dsl::*;
+    let wish = models::UserWishlist {
+        user_id: claims.sub.parse().unwrap(),
         movie_id,
     };
-    diesel::insert_into(user_wishes)
+
+    diesel::insert_into(user_wishlist)
         .values(&wish)
         .execute(&conn)
-        .unwrap();
-    format!("Wish added for {}", login.name)
+        .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+            status: "error".to_string(),
+            data: None,
+            message: Some("Failed to add to wishlist".to_string()),
+        })))?;
+
+    Ok(Json(ApiResponse {
+        status: "success".to_string(),
+        data: None,
+        message: Some("Added to wishlist".to_string()),
+    }))
 }
 
 #[post("/rent-item", data = "<item>")]
-fn rent_item(item: Form<MovieRentalRecord>, conn: diesel::mysql::MysqlConnection) -> String {
-    diesel::insert_into(schema::movie_rentals::table)
-        .values(&item.into_inner())
-        .execute(&conn)
-        .unwrap();
-    format!("Rental added for {}", item.user_id)
-}
+async fn rent_item(item: Json<MovieRentalRecord>, pool: &State<DbPool>, _claims: Claims) -> Result<Json<ApiResponse<()>>, Custom<Json<ApiResponse<()>>>> {
+    let conn = pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+        status: "error".to_string(),
+        data: None,
+        message: Some("Database connection error".to_string()),
+    })))?;
 
-#[post("/add-item", data = "<item>")]
-fn add_item(item: Form<MovieRecord>, conn: diesel::mysql::MysqlConnection) -> String {
-    diesel::insert_into(schema::movies::table)
+    diesel::insert_into(schema::movie_rental_records::table)
         .values(&item.into_inner())
         .execute(&conn)
-        .unwrap();
-    format!("Movie added: {}", item.title)
+        .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+            status: "error".to_string(),
+            data: None,
+            message: Some("Failed to add rental record".to_string()),
+        })))?;
+
+    Ok(Json(ApiResponse {
+        status: "success".to_string(),
+        data: None,
+        message: Some("Rental record added".to_string()),
+    }))
 }
 
 #[post("/register", data = "<data>")]
-fn register(data: Form<UserRegistration>, conn: diesel::mysql::MysqlConnection) -> String {
+async fn register(data: Json<UserRegistration>, pool: &State<DbPool>) -> Result<Json<ApiResponse<()>>, Custom<Json<ApiResponse<()>>>> {
+    if let Err(errors) = data.validate() {
+        return Err(Custom(Status::BadRequest, Json(ApiResponse {
+            status: "error".to_string(),
+            data: None,
+            message: Some(format!("Validation error: {:?}", errors)),
+        })));
+    }
+
+    let conn = pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+        status: "error".to_string(),
+        data: None,
+        message: Some("Database connection error".to_string()),
+    })))?;
+
+    let hashed_password = hash(&data.password, DEFAULT_COST).map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+        status: "error".to_string(),
+        data: None,
+        message: Some("Password hashing error".to_string()),
+    })))?;
+
+    let new_user = models::NewUser {
+        username: &data.username,
+        password_hash: &hashed_password,
+        email: &data.email,
+        date_of_birth: data.date_of_birth,
+        gender_description: data.gender_description.as_deref(),
+    };
+
     diesel::insert_into(schema::users::table)
-        .values(&data.into_inner())
+        .values(&new_user)
         .execute(&conn)
-        .unwrap();
-    format!("User registered: {}", data.name)
+        .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+            status: "error".to_string(),
+            data: None,
+            message: Some("Failed to register user".to_string()),
+        })))?;
+
+    Ok(Json(ApiResponse {
+        status: "success".to_string(),
+        data: None,
+        message: Some("User registered successfully".to_string()),
+    }))
 }
 
 #[post("/login", data = "<login>")]
-fn login(login: Form<UserLogin>, conn: diesel::mysql::MysqlConnection) -> String {
+async fn login(login: Json<UserLogin>, pool: &State<DbPool>) -> Result<Json<ApiResponse<LoginResponse>>, Custom<Json<ApiResponse<()>>>> {
+    let conn = pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+        status: "error".to_string(),
+        data: None,
+        message: Some("Database connection error".to_string()),
+    })))?;
+
     use schema::users::dsl::*;
-    let user = users.filter(name.eq(&login.name)).first::<models::User>(&conn).unwrap();
-    if user.password == login.password {
-        format!("Welcome, {}!", login.name)
+    let user = users.filter(username.eq(&login.username))
+        .first::<models::User>(&conn)
+        .map_err(|_| Custom(Status::Unauthorized, Json(ApiResponse {
+            status: "error".to_string(),
+            data: None,
+            message: Some("Invalid credentials".to_string()),
+        })))?;
+
+    if verify(&login.password, &user.password_hash).map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+        status: "error".to_string(),
+        data: None,
+        message: Some("Password verification error".to_string()),
+    })))? {
+        let claims = Claims {
+            sub: user.user_id.to_string(),
+            exp: (chrono::Utc::now() + chrono::Duration::hours(24)).timestamp() as usize,
+        };
+
+        let token = encode(&Header::default(), &claims, &EncodingKey::from_secret("secret".as_ref()))
+            .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+                status: "error".to_string(),
+                data: None,
+                message: Some("Token generation error".to_string()),
+            })))?;
+
+        Ok(Json(ApiResponse {
+            status: "success".to_string(),
+            data: Some(LoginResponse { token }),
+            message: None,
+        }))
     } else {
-        "Invalid password".to_string()
+        Err(Custom(Status::Unauthorized, Json(ApiResponse {
+            status: "error".to_string(),
+            data: None,
+            message: Some("Invalid credentials".to_string()),
+        })))
     }
-}
-
-#[get("/home")]
-async fn serve_index() -> Result<NamedFile, std::io::Error> {
-    NamedFile::open("htdocs/index.html").await
-}
-
-#[get("/")]
-async fn serve_login() -> Result<NamedFile, std::io::Error> {
-    NamedFile::open("htdocs/login.html").await
-}
-
-#[get("/search")]
-async fn serve_search() -> Result<NamedFile, std::io::Error> {
-    NamedFile::open("htdocs/search.html").await
 }
 
 #[launch]
 fn rocket() -> _ {
-    let conn = diesel::establish_connection();
-    rocket::build().mount("/api", routes![index, search, browse,
-                                          add_item, rent_item, wish_item,
-                                          login, register]);
-    rocket::build().mount("/", routes![serve_index, serve_login, serve_search]);
+    dotenv().ok();
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let manager = ConnectionManager::<MysqlConnection>::new(database_url);
+    let pool = Pool::builder()
+        .build(manager)
+        .expect("Failed to create pool");
+
+    rocket::build()
+        .mount("/api", routes![search, browse, wish_item, rent_item, register, login])
+        .manage(pool)
 }
