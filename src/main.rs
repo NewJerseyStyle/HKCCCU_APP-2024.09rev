@@ -97,21 +97,7 @@ async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec
     use crate::schema::Movies::dsl::*;
     let results = Movies
         .filter(Title.like(format!("%{}%", name)))
-        .select((ID, Title, Director, Genre, ReleaseDate, Rating, Duration))
-        .load::<(i32, String, String, String, Option<String>, Option<String>, Option<bigdecimal::BigDecimal>)>(conn)
-        .map(|results| {
-            results.into_iter().map(|(id, title, director, genre, release_date, rating, duration)| {
-                models::Movie {
-                    id,
-                    title,
-                    director,
-                    genre,
-                    release_date,
-                    rating,
-                    duration,
-                }
-            }).collect::<Vec<_>>()
-        })
+        .load::<models::Movie>(conn)
         .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
             status: "error".to_string(),
             data: None,
@@ -127,19 +113,20 @@ async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec
 
 #[get("/browse/<id>")]
 async fn browse(id: i32, pool: &State<DbPool>) -> Result<Json<ApiResponse<models::Movie>>, Custom<Json<ApiResponse<()>>>> {
-    let conn = pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+    let conn = &mut pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
         status: "error".to_string(),
         data: None,
         message: Some("Database connection error".to_string()),
     })))?;
 
-    use schema::Movies::dsl::*;
-    let movie = Movies.find(id)
-        .first::<models::Movie>(&conn)
-        .map_err(|_| Custom(Status::NotFound, Json(ApiResponse {
+    use crate::schema::Movies::dsl::*;
+    let movie = Movies
+        .filter(MovieID.eq(id))
+        .first::<models::Movie>(conn)
+        .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
             status: "error".to_string(),
             data: None,
-            message: Some("Movie not found".to_string()),
+            message: Some("Database query error".to_string()),
         })))?;
 
     Ok(Json(ApiResponse {
