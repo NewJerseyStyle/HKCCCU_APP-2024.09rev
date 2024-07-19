@@ -1,4 +1,5 @@
 #[macro_use] extern crate rocket;
+// #[macro_use] extern crate diesel;
 use rocket::serde::json::Json;
 use rocket::request::{FromRequest, Outcome, Request};
 use rocket::http::Status;
@@ -87,21 +88,14 @@ struct ApiResponse<T> {
 
 #[get("/search/<name>")]
 async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec<models::Movie>>>, Custom<Json<ApiResponse<()>>>> {
-    let conn = pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
-        status: "error".to_string(),
-        data: None,
-        message: Some("Database connection error".to_string()),
-    })))?;
+    let conn = &mut pool.get().expect("Database connection error");
 
     use crate::schema::Movies::dsl::*;
     let results = Movies
         .filter(Title.like(format!("%{}%", name)))
-        .load(&mut conn);
-        // .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
-        //     status: "error".to_string(),
-        //     data: None,
-        //     message: Some("Database query error".to_string()),
-        // })))?;
+        .select(models::Movie::as_select())
+        .load::<models::Movie>(&conn)
+        .expect("Database query error");
 
     Ok(Json(ApiResponse {
         status: "success".to_string(),
@@ -113,22 +107,14 @@ async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec
 
 #[get("/browse/<id>")]
 async fn browse(id: i32, pool: &State<DbPool>) -> Result<Json<ApiResponse<models::Movie>>, Custom<Json<ApiResponse<()>>>> {
-    let conn = &mut pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
-        status: "error".to_string(),
-        data: None,
-        message: Some("Database connection error".to_string()),
-    })))?;
+    let conn = &mut pool.get().expect("Database connection error");
 
     use crate::schema::Movies::dsl::*;
     let movie = Movies
         .filter(MovieID.eq(id))
         .select(models::Movie::as_select())
         .first(conn)
-        .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
-            status: "error".to_string(),
-            data: None,
-            message: Some("Database query error".to_string()),
-        })))?;
+        .expect("Database query error");
 
     Ok(Json(ApiResponse {
         status: "success".to_string(),
@@ -139,11 +125,7 @@ async fn browse(id: i32, pool: &State<DbPool>) -> Result<Json<ApiResponse<models
 
 #[post("/wish-item/<movie_id>")]
 async fn wish_item(movie_id: i32, pool: &State<DbPool>, claims: Claims) -> Result<Json<ApiResponse<()>>, Custom<Json<ApiResponse<()>>>> {
-    let conn = pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
-        status: "error".to_string(),
-        data: None,
-        message: Some("Database connection error".to_string()),
-    })))?;
+    let conn = pool.get().expect("Database connection error");
 
     use schema::UserWishlist::dsl::*;
     let wish = models::UserWishlist {
@@ -154,11 +136,7 @@ async fn wish_item(movie_id: i32, pool: &State<DbPool>, claims: Claims) -> Resul
     diesel::insert_into(UserWishlist)
         .values(&wish)
         .execute(&conn)
-        .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
-            status: "error".to_string(),
-            data: None,
-            message: Some("Failed to add to wishlist".to_string()),
-        })))?;
+        .expect("Failed to add to wishlist");
 
     Ok(Json(ApiResponse {
         status: "success".to_string(),
@@ -169,20 +147,12 @@ async fn wish_item(movie_id: i32, pool: &State<DbPool>, claims: Claims) -> Resul
 
 #[post("/rent-item", data = "<item>")]
 async fn rent_item(item: Json<MovieRentalRecord>, pool: &State<DbPool>, _claims: Claims) -> Result<Json<ApiResponse<()>>, Custom<Json<ApiResponse<()>>>> {
-    let conn = pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
-        status: "error".to_string(),
-        data: None,
-        message: Some("Database connection error".to_string()),
-    })))?;
+    let conn = pool.get().expect("Database connection error");
 
     diesel::insert_into(schema::MovieRentalRecords::table)
         .values(&item.into_inner())
         .execute(&conn)
-        .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
-            status: "error".to_string(),
-            data: None,
-            message: Some("Failed to add rental record".to_string()),
-        })))?;
+        .expect("Failed to add rental record");
 
     Ok(Json(ApiResponse {
         status: "success".to_string(),
@@ -201,17 +171,9 @@ async fn register(data: Json<UserRegistration>, pool: &State<DbPool>) -> Result<
         })));
     }
 
-    let conn = pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
-        status: "error".to_string(),
-        data: None,
-        message: Some("Database connection error".to_string()),
-    })))?;
+    let conn = pool.get().expect("Database connection error");
 
-    let hashed_password = hash(&data.password, DEFAULT_COST).map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
-        status: "error".to_string(),
-        data: None,
-        message: Some("Password hashing error".to_string()),
-    })))?;
+    let hashed_password = hash(&data.password, DEFAULT_COST).expect("Password hashing error");
 
     let new_user = models::User {
         Username: data.username,
@@ -224,11 +186,7 @@ async fn register(data: Json<UserRegistration>, pool: &State<DbPool>) -> Result<
     diesel::insert_into(schema::Users::table)
         .values(&new_user)
         .execute(&mut conn)
-        .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
-            status: "error".to_string(),
-            data: None,
-            message: Some("Failed to register user".to_string()),
-        })))?;
+        .expect("Failed to register user");
 
     Ok(Json(ApiResponse {
         status: "success".to_string(),
@@ -239,37 +197,21 @@ async fn register(data: Json<UserRegistration>, pool: &State<DbPool>) -> Result<
 
 #[post("/login", data = "<login>")]
 async fn login(login: Json<UserLogin>, pool: &State<DbPool>) -> Result<Json<ApiResponse<LoginResponse>>, Custom<Json<ApiResponse<()>>>> {
-    let conn = pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
-        status: "error".to_string(),
-        data: None,
-        message: Some("Database connection error".to_string()),
-    })))?;
+    let conn = pool.get().expect("Database connection error");
 
     use schema::Users::dsl::*;
     let user = Users.filter(Username.eq(&login.username))
         .first::<models::User>(&mut conn)
-        .map_err(|_| Custom(Status::Unauthorized, Json(ApiResponse {
-            status: "error".to_string(),
-            data: None,
-            message: Some("Invalid credentials".to_string()),
-        })))?;
+        .expect("Invalid credentials");
 
-    if verify(&login.password, &user.PasswordHash).map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
-        status: "error".to_string(),
-        data: None,
-        message: Some("Password verification error".to_string()),
-    })))? {
+    if verify(&login.password, &user.PasswordHash).expect("Password verification error") {
         let claims = Claims {
             sub: user.UserID.to_string(),
             exp: (chrono::Utc::now() + chrono::Duration::hours(24)).timestamp() as usize,
         };
 
         let token = encode(&Header::default(), &claims, &EncodingKey::from_secret("secret".as_ref()))
-            .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
-                status: "error".to_string(),
-                data: None,
-                message: Some("Token generation error".to_string()),
-            })))?;
+            .expect("Token generation error");
 
         Ok(Json(ApiResponse {
             status: "success".to_string(),
