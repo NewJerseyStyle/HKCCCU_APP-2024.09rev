@@ -213,9 +213,9 @@ async fn register(data: Json<UserRegistration>, pool: &State<DbPool>) -> Result<
     })))?;
 
     let new_user = models::User {
-        Username: &data.username,
-        PasswordHash: &hashed_password,
-        Email: &data.email,
+        Username: data.username,
+        PasswordHash: hashed_password,
+        Email: data.email,
         date_of_birth: data.date_of_birth,
         gender_description: data.gender_description.as_deref(),
     };
