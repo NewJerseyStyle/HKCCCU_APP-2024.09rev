@@ -31,19 +31,23 @@ impl FromSql<Numeric, Mysql> for SqlDecimal {
 
 impl ToSql<Numeric, Mysql> for SqlDecimal {
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Mysql>) -> diesel::serialize::Result {
-        // Convert Decimal to a format that can be serialized to SQL
+        // Convert Decimal to bytes or use the appropriate serialization method
         let bytes = self.0.serialize_to_bytes()?;
+        
+        // Write the bytes to the output
         out.write_all(&bytes)?;
-        Ok(())
+        
+        // Return IsNull::No to indicate that this value is not null
+        Ok(IsNull::No)
     }
 }
 
-// impl QueryableByName<Mysql> for SqlDecimal {
-//     fn build<R: NamedRow<Mysql>>(row: &R) -> diesel::deserialize::Result<Self> {
-//         let decimal: Decimal = Decimal::build(row)?;
-//         Ok(SqlDecimal(decimal))
-//     }
-// }
+impl QueryableByName<Mysql> for SqlDecimal {
+    fn build<R: NamedRow<Mysql>>(row: &R) -> diesel::deserialize::Result<Self> {
+        let decimal: Decimal = Decimal::build(row)?;
+        Ok(SqlDecimal(decimal))
+    }
+}
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::Actors)]
