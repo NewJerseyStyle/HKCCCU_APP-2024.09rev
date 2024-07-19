@@ -12,6 +12,7 @@ use diesel::mysql::MysqlConnection;
 
 mod diesel;
 mod schema;
+mod models;
 
 #[derive(Serialize, Deserialize)]
 struct UserLogin {
@@ -64,7 +65,7 @@ fn index() -> &'static str {
 #[get("/search/<name>")]
 fn search(name: &str, conn: diesel::mysql::MysqlConnection) -> String {
     use schema::movies::dsl::*;
-    let results = movies.filter(title.like(format!("%{}%", name))).load::<schema::Movie>(&conn).unwrap();
+    let results = movies.filter(title.like(format!("%{}%", name))).load::<models::Movie>(&conn).unwrap();
     let mut response = "Search results:\n".to_string();
     for movie in results {
         response.push_str(&format!("{} - {}\n", movie.title, movie.director));
@@ -75,14 +76,14 @@ fn search(name: &str, conn: diesel::mysql::MysqlConnection) -> String {
 #[get("/browse/<id>")]
 fn browse(id: i32, conn: diesel::mysql::MysqlConnection) -> String {
     use schema::movies::dsl::*;
-    let movie = movies.find(id).first::<schema::Movie>(&conn).unwrap();
+    let movie = movies.find(id).first::<models::Movie>(&conn).unwrap();
     format!("Movie {} - {}", movie.title, movie.director)
 }
 
 #[post("/wish-item/<movie_id>")]
 fn wish_item(movie_id: i32, conn: diesel::mysql::MysqlConnection, login: Form<UserLogin>) -> String {
     use schema::user_wishes::dsl::*;
-    let wish = schema::UserWish {
+    let wish = models::UserWish {
         user_id: 1, // placeholder, should be the actual user ID
         movie_id,
     };
@@ -123,7 +124,7 @@ fn register(data: Form<UserRegistration>, conn: diesel::mysql::MysqlConnection) 
 #[post("/login", data = "<login>")]
 fn login(login: Form<UserLogin>, conn: diesel::mysql::MysqlConnection) -> String {
     use schema::users::dsl::*;
-    let user = users.filter(name.eq(&login.name)).first::<schema::User>(&conn).unwrap();
+    let user = users.filter(name.eq(&login.name)).first::<models::User>(&conn).unwrap();
     if user.password == login.password {
         format!("Welcome, {}!", login.name)
     } else {
