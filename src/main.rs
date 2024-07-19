@@ -96,12 +96,12 @@ async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec
     use crate::schema::Movies::dsl::*;
     let results = Movies
         .filter(Title.like(format!("%{}%", name)))
-        .load(&mut conn)
-        .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
-            status: "error".to_string(),
-            data: None,
-            message: Some("Database query error".to_string()),
-        })))?;
+        .load(&mut conn);
+        // .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+        //     status: "error".to_string(),
+        //     data: None,
+        //     message: Some("Database query error".to_string()),
+        // })))?;
 
     Ok(Json(ApiResponse {
         status: "success".to_string(),

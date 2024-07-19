@@ -43,8 +43,8 @@ pub struct MovieRentalRecord {
     pub RentalPrice: Decimal,
 }
 
-#[derive(Debug, Insertable, Queryable, Selectable, Serialize, Deserialize)]
-#[diesel(table_name = crate::schema::Movies)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
+// #[diesel(table_name = crate::schema::Movies)]
 pub struct Movie {
     pub MovieID: i32,
     pub Title: String,
