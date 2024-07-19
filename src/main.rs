@@ -153,6 +153,6 @@ fn rocket() -> _ {
     let conn = diesel::establish_connection();
     rocket::build().mount("/api", routes![index, search, browse,
                                           add_item, rent_item, wish_item,
-                                          login, register])
-    rocket::build().mount("/", routes![serve_index, serve_login, serve_search])
+                                          login, register]);
+    rocket::build().mount("/", routes![serve_index, serve_login, serve_search]);
 }
