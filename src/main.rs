@@ -5,7 +5,7 @@ use rocket::http::Status;
 use rocket::State;
 use rocket::response::status::Custom;
 use chrono::NaiveDate;
-use validator::{Validate, ValidationError};
+use validator::{Validate};
 use bcrypt::{hash, verify, DEFAULT_COST};
 use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
 use diesel::prelude::*;
@@ -73,15 +73,17 @@ struct ApiResponse<T> {
 
 #[get("/search/<name>")]
 async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec<models::Movie>>>, Custom<Json<ApiResponse<()>>>> {
-    let conn = pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+    let conn = &mut pool.get().map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
         status: "error".to_string(),
         data: None,
         message: Some("Database connection error".to_string()),
     })))?;
 
-    use schema::Movies::dsl::*;
-    let results = Movies.filter(Title.like(format!("%{}%", name)))
-        .load::<models::Movie>(&conn)
+    use crate::schema::Movies::dsl::*;
+    let results = Movies
+        .filter(Title.like(format!("%{}%", name)))
+        .select(models::Movie::as_select())
+        .load(conn)
         .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
             status: "error".to_string(),
             data: None,
