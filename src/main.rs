@@ -94,7 +94,7 @@ async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec
     let results = Movies
         .filter(Title.like(format!("%{}%", name)))
         .select(models::Movie::as_select())
-        .load::<models::Movie>(&conn)
+        .load::<models::Movie>(&mut conn)
         .expect("Database query error");
 
     Ok(Json(ApiResponse {
@@ -135,7 +135,7 @@ async fn wish_item(movie_id: i32, pool: &State<DbPool>, claims: Claims) -> Resul
 
     diesel::insert_into(UserWishlist)
         .values(&wish)
-        .execute(&conn)
+        .execute(&mut conn)
         .expect("Failed to add to wishlist");
 
     Ok(Json(ApiResponse {
@@ -151,7 +151,7 @@ async fn rent_item(item: Json<MovieRentalRecord>, pool: &State<DbPool>, _claims:
 
     diesel::insert_into(schema::MovieRentalRecords::table)
         .values(&item.into_inner())
-        .execute(&conn)
+        .execute(&mut conn)
         .expect("Failed to add rental record");
 
     Ok(Json(ApiResponse {
