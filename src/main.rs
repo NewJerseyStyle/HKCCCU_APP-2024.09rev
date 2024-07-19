@@ -88,13 +88,13 @@ struct ApiResponse<T> {
 
 #[get("/search/<name>")]
 async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec<models::Movie>>>, Custom<Json<ApiResponse<()>>>> {
-    let conn = &mut pool.get().expect("Database connection error");
+    let conn = pool.get().expect("Database connection error");
 
     use crate::schema::Movies::dsl::*;
     let results = Movies
         .filter(Title.like(format!("%{}%", name)))
         .select(models::Movie::as_select())
-        .load::<models::Movie>(conn)
+        .load(&conn)
         .expect("Database query error");
 
     Ok(Json(ApiResponse {
