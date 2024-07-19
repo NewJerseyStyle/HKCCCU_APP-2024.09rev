@@ -7,10 +7,10 @@ use rocket::request::Form;
 use chrono::NaiveDate;
 use validator::{validate, Validate};
 use regex::Regex;
+use diesel;
 use diesel::prelude::*;
 use diesel::mysql::MysqlConnection;
 
-mod diesel;
 mod schema;
 mod models;
 
