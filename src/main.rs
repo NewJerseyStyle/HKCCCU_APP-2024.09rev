@@ -10,7 +10,8 @@ use bcrypt::{hash, verify, DEFAULT_COST};
 use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
-use dotenv::dotenv;
+use dotenvy::dotenv;
+use serde::{Serialize, Deserialize};
 use std::env;
 
 mod schema;
