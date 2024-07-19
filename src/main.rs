@@ -1,6 +1,7 @@
 #[macro_use] extern crate rocket;
 // #[macro_use] extern crate diesel;
 use rocket::serde::json::Json;
+use rocket::request::{FromRequest, Outcome, Request};
 use rocket::http::Status;
 use rocket::State;
 use rocket::response::status::Custom;
@@ -57,6 +58,30 @@ pub struct MovieRentalRecord {
 struct Claims {
     sub: String,
     exp: usize,
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for Claims {
+    type Error = ();
+
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        // Get the token from the Authorization header
+        let token = request.headers().get_one("Authorization");
+        match token {
+            Some(token) if token.starts_with("Bearer ") => {
+                let token = token.trim_start_matches("Bearer ").trim();
+                
+                // Decode and validate the token
+                let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+                let key = DecodingKey::from_secret(secret.as_bytes());
+                match decode::<Claims>(token, &key, &Validation::default()) {
+                    Ok(token_data) => Outcome::Success(token_data.claims),
+                    Err(_) => Outcome::Failure((Status::Unauthorized, ())),
+                }
+            }
+            _ => Outcome::Failure((Status::Unauthorized, ())),
+        }
+    }
 }
 
 #[derive(Serialize)]
