@@ -1,19 +1,47 @@
 use std::str::FromStr;
 use chrono::{NaiveDate, NaiveDateTime};
 use diesel::prelude::*;
-use diesel::deserialize::FromSql;
-use diesel::mysql::Mysql;
+use diesel::deserialize::{FromSql, QueryableByName};
+use diesel::serialize::{ToSql, Output};
+use diesel::expression::AsExpression;
+use diesel::mysql::{Mysql, MysqlValue};
+use diesel::sql_types::Numeric;
+use diesel::row::NamedRow;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct SqlDecimal(pub Decimal);
+
+// impl FromSql<diesel::sql_types::Numeric, Mysql> for SqlDecimal {
+//     fn from_sql(bytes: Option<&[u8]>) -> diesel::deserialize::Result<Self> {
+//         let bytes = not_none!(bytes);
+//         let s = std::str::from_utf8(bytes)?;
+//         let decimal = rust_decimal::Decimal::from_str(s).map_err(|_| "Invalid Decimal".into())?;
+//         Ok(SqlDecimal(decimal))
+//     }
+// }
+
+#[derive(Debug, Clone, FromSqlRow, AsExpression)]
+#[diesel(sql_type = Numeric)]
 pub struct SqlDecimal(pub Decimal);
 
-impl FromSql<diesel::sql_types::Numeric, Mysql> for SqlDecimal {
-    fn from_sql(bytes: Option<&[u8]>) -> diesel::deserialize::Result<Self> {
-        let bytes = not_none!(bytes);
-        let s = std::str::from_utf8(bytes)?;
-        let decimal = rust_decimal::Decimal::from_str(s).map_err(|_| "Invalid Decimal".into())?;
+impl FromSql<Numeric, Mysql> for SqlDecimal {
+    fn from_sql(value: MysqlValue) -> diesel::deserialize::Result<Self> {
+        let decimal = Decimal::from_sql(value)?;
+        Ok(SqlDecimal(decimal))
+    }
+}
+
+impl ToSql<Numeric, Mysql> for SqlDecimal {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Mysql>) -> diesel::serialize::Result {
+        self.0.to_sql(out)
+    }
+}
+
+impl QueryableByName<Mysql> for SqlDecimal {
+    fn build<R: NamedRow<Mysql>>(row: &R) -> diesel::deserialize::Result<Self> {
+        let decimal: Decimal = Decimal::build(row)?;
         Ok(SqlDecimal(decimal))
     }
 }
