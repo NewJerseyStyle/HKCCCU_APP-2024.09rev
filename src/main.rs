@@ -89,7 +89,7 @@ async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec
         message: Some("Database connection error".to_string()),
     })))?;
 
-    use schema::Movie::dsl::*;
+    use schema::Movies::dsl::*;
     let results = movies.filter(title.like(format!("%{}%", name)))
         .load::<models::Movie>(&conn)
         .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
@@ -113,7 +113,7 @@ async fn browse(id: i32, pool: &State<DbPool>) -> Result<Json<ApiResponse<models
         message: Some("Database connection error".to_string()),
     })))?;
 
-    use schema::Movie::dsl::*;
+    use schema::Movies::dsl::*;
     let movie = movies.find(id)
         .first::<models::Movie>(&conn)
         .map_err(|_| Custom(Status::NotFound, Json(ApiResponse {
@@ -167,7 +167,7 @@ async fn rent_item(item: Json<MovieRentalRecord>, pool: &State<DbPool>, _claims:
         message: Some("Database connection error".to_string()),
     })))?;
 
-    diesel::insert_into(schema::movie_rental_records::table)
+    diesel::insert_into(schema::Movies_rental_records::table)
         .values(&item.into_inner())
         .execute(&conn)
         .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
@@ -213,7 +213,7 @@ async fn register(data: Json<UserRegistration>, pool: &State<DbPool>) -> Result<
         gender_description: data.gender_description.as_deref(),
     };
 
-    diesel::insert_into(schema::User::table)
+    diesel::insert_into(schema::Users::table)
         .values(&new_user)
         .execute(&conn)
         .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
@@ -237,7 +237,7 @@ async fn login(login: Json<UserLogin>, pool: &State<DbPool>) -> Result<Json<ApiR
         message: Some("Database connection error".to_string()),
     })))?;
 
-    use schema::User::dsl::*;
+    use schema::Users::dsl::*;
     let user = users.filter(username.eq(&login.username))
         .first::<models::User>(&conn)
         .map_err(|_| Custom(Status::Unauthorized, Json(ApiResponse {
