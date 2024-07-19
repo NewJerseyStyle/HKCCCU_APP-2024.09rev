@@ -3,7 +3,8 @@
 
 [print_schema]
 file = "src/schema.rs"
-custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
+# custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
+with_docs = true  # 是否创建Docs注释
 
 [migrations_directory]
 dir = "/home/azureuser/HKCCCU_APP-2024.09rev/migrations"

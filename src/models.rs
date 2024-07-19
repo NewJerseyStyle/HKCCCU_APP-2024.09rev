@@ -1,13 +1,11 @@
 use std::str::FromStr;
 use chrono::{NaiveDate, NaiveDateTime};
 use diesel::prelude::*;
-use diesel::mysql::{Mysql, MysqlValue};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::Actors)]
-#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct Actor {
     pub ActorID: i32,
     pub Name: String,
@@ -19,7 +17,6 @@ pub struct Actor {
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::Directors)]
-#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct Director {
     pub DirectorID: i32,
     pub Name: String,
@@ -31,7 +28,6 @@ pub struct Director {
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::Genres)]
-#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct Genre {
     pub GenreID: i32,
     pub GenreName: String,
@@ -39,7 +35,6 @@ pub struct Genre {
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::MovieRentalRecords)]
-#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct MovieRentalRecord {
     pub RentalID: i32,
     pub UserID: i32,
@@ -51,7 +46,6 @@ pub struct MovieRentalRecord {
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::Movies)]
-#[diesel(check_for_backend(diesel::mysql::Mysql))]
 #[diesel(deserialize)]
 pub struct Movie {
     pub MovieID: i32,
@@ -65,7 +59,6 @@ pub struct Movie {
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::MoviesActors)]
-#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct MovieActor {
     pub MovieID: i32,
     pub ActorID: i32,
@@ -73,7 +66,6 @@ pub struct MovieActor {
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::MoviesDirectors)]
-#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct MovieDirector {
     pub MovieID: i32,
     pub DirectorID: i32,
@@ -81,7 +73,6 @@ pub struct MovieDirector {
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::MoviesGenres)]
-#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct MovieGenre {
     pub MovieID: i32,
     pub GenreID: i32,
@@ -89,7 +80,6 @@ pub struct MovieGenre {
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::Reviews)]
-#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct Review {
     pub ReviewID: i32,
     pub UserID: Option<i32>,
@@ -102,7 +92,6 @@ pub struct Review {
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::UserWishlist)]
-#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct UserWishlist {
     pub UserID: i32,
     pub MovieID: i32,
@@ -110,7 +99,6 @@ pub struct UserWishlist {
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::Users)]
-#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct User {
     pub UserID: i32,
     pub Username: String,
