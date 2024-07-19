@@ -36,12 +36,12 @@ impl ToSql<Numeric, Mysql> for SqlDecimal {
     }
 }
 
-impl QueryableByName<Mysql> for SqlDecimal {
-    fn build<R: NamedRow<Mysql>>(row: &R) -> diesel::deserialize::Result<Self> {
-        let decimal: Decimal = Decimal::build(row)?;
-        Ok(SqlDecimal(decimal))
-    }
-}
+// impl QueryableByName<Mysql> for SqlDecimal {
+//     fn build<R: NamedRow<Mysql>>(row: &R) -> diesel::deserialize::Result<Self> {
+//         let decimal: Decimal = Decimal::build(row)?;
+//         Ok(SqlDecimal(decimal))
+//     }
+// }
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::Actors)]
