@@ -14,47 +14,10 @@ use serde::{Deserialize, Serialize};
 #[diesel(sql_type = Numeric)]
 pub struct SqlDecimal(pub Decimal);
 
-// impl FromSql<diesel::sql_types::Numeric, Mysql> for SqlDecimal {
-//     fn from_sql(bytes: Option<&[u8]>) -> diesel::deserialize::Result<Self> {
-//         let bytes = not_none!(bytes);
-//         let s = std::str::from_utf8(bytes)?;
-//         let decimal = rust_decimal::Decimal::from_str(s).map_err(|_| "Invalid Decimal".into())?;
-//         Ok(SqlDecimal(decimal))
-//     }
-// }
 impl FromSql<Numeric, Mysql> for SqlDecimal {
     fn from_sql(value: MysqlValue) -> diesel::deserialize::Result<Self> {
         let decimal = Decimal::from_sql(value)?;
         Ok(SqlDecimal(decimal))
-    }
-}
-
-impl ToSql<Numeric, Mysql> for SqlDecimal {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Mysql>) -> diesel::serialize::Result {
-        // Convert Decimal to bytes or use the appropriate serialization method
-        let bytes = self.0.serialize_to_bytes()?;
-        
-        // Write the bytes to the output
-        out.write_all(&bytes)?;
-        
-        // Return IsNull::No to indicate that this value is not null
-        Ok(IsNull::No)
-    }
-}
-
-impl QueryableByName<Mysql> for SqlDecimal {
-    fn build<R: NamedRow<Mysql>>(row: &R) -> diesel::deserialize::Result<Self> {
-        // Assuming the column type is Numeric and you can extract it as i128 for example
-        let value: Option<i128> = row.get("your_column_name")?; // Replace with your actual column name
-
-        match value {
-            Some(v) => {
-                // Create a Decimal from the i128 value
-                let decimal = Decimal::from_i128_with_scale(v, 0).map_err(|_| diesel::deserialize::Error::Custom("Invalid Decimal"))?;
-                Ok(SqlDecimal(decimal))
-            }
-            None => Err(diesel::deserialize::Error::Custom("Value is null")),
-        }
     }
 }
 
