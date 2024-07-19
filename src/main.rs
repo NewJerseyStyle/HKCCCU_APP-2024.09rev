@@ -38,20 +38,10 @@ pub struct UserRegistration {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct MovieRecord {
-    title: String,
-    director: String,
-    starring: Vec<String>,
-    details: Option<String>,
-    staffs: Option<Vec<String>>,
-    rental_price: Option<f64>,
-}
-
-#[derive(Serialize, Deserialize)]
 pub struct MovieRentalRecord {
-    user_id: i32,
-    movie_id: i32,
-    rental_date: NaiveDate
+    UserID: i32,
+    MovieID: i32,
+    RentalDate: NaiveDate
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -156,7 +146,7 @@ async fn wish_item(movie_id: i32, pool: &State<DbPool>, claims: Claims) -> Resul
 
     use schema::UserWishlist::dsl::*;
     let wish = models::UserWishlist {
-        user_id: claims.sub.parse().unwrap(),
+        UserID: claims.sub.parse().unwrap(),
         movie_id,
     };
 
@@ -269,7 +259,7 @@ async fn login(login: Json<UserLogin>, pool: &State<DbPool>) -> Result<Json<ApiR
         message: Some("Password verification error".to_string()),
     })))? {
         let claims = Claims {
-            sub: user.user_id.to_string(),
+            sub: user.UserID.to_string(),
             exp: (chrono::Utc::now() + chrono::Duration::hours(24)).timestamp() as usize,
         };
 
