@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-rocket = "0.5.1"
-diesel = { version = "2.2.0", features = ["mysql"] }
+rocket = { version = "0.5.1", features = ["json"] }
+diesel = { version = "2.2.0", features = ["mysql", "r2d2", "chrono"] }
 dotenvy = "0.15"
 chrono = { version = "0.4.38", features = ["serde"] }
 rust_decimal = { version = "1.35.0", features = ["serde"] }
