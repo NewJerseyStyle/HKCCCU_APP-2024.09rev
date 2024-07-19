@@ -29,21 +29,11 @@ struct UserLogin {
 pub struct UserRegistration {
     #[validate(length(min = 3, max = 20))]
     username: String,
-    #[validate(custom = "validate_password")]
     password: String,
     #[validate(email)]
     email: String,
     date_of_birth: NaiveDate,
     gender_description: Option<String>,
-}
-
-fn validate_password(password: &String) -> Result<(), ValidationError> {
-    let re = Regex::new(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$").unwrap();
-    if re.is_match(password.as_str()) {
-        Ok(())
-    } else {
-        Err(ValidationError::new("Password does not meet requirements"))
-    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -238,7 +228,7 @@ async fn login(login: Json<UserLogin>, pool: &State<DbPool>) -> Result<Json<ApiR
     })))?;
 
     use schema::Users::dsl::*;
-    let user = users.filter(Username.eq(&login.username))
+    let user = Users.filter(Username.eq(&login.username))
         .first::<models::User>(&conn)
         .map_err(|_| Custom(Status::Unauthorized, Json(ApiResponse {
             status: "error".to_string(),
