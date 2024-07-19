@@ -1,7 +1,17 @@
 use chrono::{NaiveDate, NaiveDateTime};
 use diesel::prelude::*;
+use diesel::deserialize::FromSql;
+use diesel::mysql::Mysql;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
+
+impl FromSql<diesel::sql_types::Numeric, Mysql> for Decimal {
+    fn from_sql(bytes: Option<&[u8]>) -> diesel::deserialize::Result<Self> {
+        let bytes = not_none!(bytes);
+        let s = std::str::from_utf8(bytes)?;
+        Decimal::from_str(s).map_err(|_| "Invalid Decimal".into())
+    }
+}
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::Actors)]
