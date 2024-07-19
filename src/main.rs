@@ -222,7 +222,7 @@ async fn register(data: Json<UserRegistration>, pool: &State<DbPool>) -> Result<
 
     diesel::insert_into(schema::Users::table)
         .values(&new_user)
-        .execute(&conn)
+        .execute(&mut conn)
         .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
             status: "error".to_string(),
             data: None,
@@ -246,14 +246,14 @@ async fn login(login: Json<UserLogin>, pool: &State<DbPool>) -> Result<Json<ApiR
 
     use schema::Users::dsl::*;
     let user = Users.filter(Username.eq(&login.username))
-        .first::<models::User>(&conn)
+        .first::<models::User>(&mut conn)
         .map_err(|_| Custom(Status::Unauthorized, Json(ApiResponse {
             status: "error".to_string(),
             data: None,
             message: Some("Invalid credentials".to_string()),
         })))?;
 
-    if verify(&login.password, &user.password_hash).map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
+    if verify(&login.password, &user.PasswordHash).map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
         status: "error".to_string(),
         data: None,
         message: Some("Password verification error".to_string()),
