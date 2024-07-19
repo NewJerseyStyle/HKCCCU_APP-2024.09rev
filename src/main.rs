@@ -97,7 +97,21 @@ async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec
     use crate::schema::Movies::dsl::*;
     let results = Movies
         .filter(Title.like(format!("%{}%", name)))
-        .load::<models::Movie>(conn)
+        .select((ID, Title, Director, Genre, ReleaseDate, Rating, Duration))
+        .load::<(i32, String, String, String, Option<String>, Option<String>, Option<bigdecimal::BigDecimal>)>(conn)
+        .map(|results| {
+            results.into_iter().map(|(id, title, director, genre, release_date, rating, duration)| {
+                models::Movie {
+                    id,
+                    title,
+                    director,
+                    genre,
+                    release_date,
+                    rating,
+                    duration,
+                }
+            }).collect::<Vec<_>>()
+        })
         .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
             status: "error".to_string(),
             data: None,
