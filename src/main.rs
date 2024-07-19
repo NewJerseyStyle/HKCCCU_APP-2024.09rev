@@ -94,7 +94,7 @@ async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec
     let results = Movies
         .filter(Title.like(format!("%{}%", name)))
         .select(models::Movie::as_select())
-        .load::<models::Movie>(&mut conn)
+        .load::<models::Movie>(conn)
         .expect("Database query error");
 
     Ok(Json(ApiResponse {
@@ -125,7 +125,7 @@ async fn browse(id: i32, pool: &State<DbPool>) -> Result<Json<ApiResponse<models
 
 #[post("/wish-item/<movie_id>")]
 async fn wish_item(movie_id: i32, pool: &State<DbPool>, claims: Claims) -> Result<Json<ApiResponse<()>>, Custom<Json<ApiResponse<()>>>> {
-    let conn = pool.get().expect("Database connection error");
+    let mut conn = pool.get().expect("Database connection error");
 
     use schema::UserWishlist::dsl::*;
     let wish = models::UserWishlist {
@@ -147,7 +147,7 @@ async fn wish_item(movie_id: i32, pool: &State<DbPool>, claims: Claims) -> Resul
 
 #[post("/rent-item", data = "<item>")]
 async fn rent_item(item: Json<MovieRentalRecord>, pool: &State<DbPool>, _claims: Claims) -> Result<Json<ApiResponse<()>>, Custom<Json<ApiResponse<()>>>> {
-    let conn = pool.get().expect("Database connection error");
+    let mut conn = pool.get().expect("Database connection error");
 
     diesel::insert_into(schema::MovieRentalRecords::table)
         .values(&item.into_inner())
