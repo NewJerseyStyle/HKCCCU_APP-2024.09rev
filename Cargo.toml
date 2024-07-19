@@ -10,3 +10,7 @@ dotenvy = "0.15"
 chrono = { version = "0.4.38", features = ["serde"] }
 rust_decimal = { version = "1.35.0", features = ["serde"] }
 serde = { version = "1.0.204", features = ["derive"] }
+validator = "0.18.1"
+bcrypt = "0.15.1"
+jsonwebtoken = "9.3.0"
+regex = "1.10.5"
