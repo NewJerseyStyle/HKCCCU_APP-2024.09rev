@@ -93,7 +93,6 @@ async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec
     use crate::schema::Movies::dsl::*;
     let results = Movies
         .filter(Title.like(format!("%{}%", name)))
-        .select(models::Movie::as_select())
         .load(&mut conn)
         .expect("Database query error");
 
