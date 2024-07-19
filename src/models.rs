@@ -1,97 +1,120 @@
 use chrono::{NaiveDate, NaiveDateTime};
+use diesel::prelude::*;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
+#[diesel(table_name = crate::schema::Actors)]
+#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct Actor {
-    pub actor_id: i32,
-    pub name: String,
-    pub birth_date: Option<NaiveDate>,
-    pub bio: Option<String>,
-    pub created_at: Option<NaiveDateTime>,
-    pub updated_at: Option<NaiveDateTime>,
+    pub ActorID: i32,
+    pub Name: String,
+    pub BirthDate: Option<NaiveDate>,
+    pub Bio: Option<String>,
+    pub CreatedAt: Option<NaiveDateTime>,
+    pub UpdatedAt: Option<NaiveDateTime>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
+#[diesel(table_name = crate::schema::Directors)]
+#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct Director {
-    pub director_id: i32,
-    pub name: String,
-    pub birth_date: Option<NaiveDate>,
-    pub bio: Option<String>,
-    pub created_at: Option<NaiveDateTime>,
-    pub updated_at: Option<NaiveDateTime>,
+    pub DirectorID: i32,
+    pub Name: String,
+    pub BirthDate: Option<NaiveDate>,
+    pub Bio: Option<String>,
+    pub CreatedAt: Option<NaiveDateTime>,
+    pub UpdatedAt: Option<NaiveDateTime>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
+#[diesel(table_name = crate::schema::Genres)]
+#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct Genre {
-    pub genre_id: i32,
-    pub genre_name: String,
+    pub GenreID: i32,
+    pub GenreName: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
+#[diesel(table_name = crate::schema::MovieRentalRecords)]
+#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct MovieRentalRecord {
-    pub rental_id: i32,
-    pub user_id: i32,
-    pub movie_id: i32,
-    pub rental_date: NaiveDate,
-    pub return_date: Option<NaiveDate>,
-    pub rental_price: Decimal,
+    pub RentalID: i32,
+    pub UserID: i32,
+    pub MovieID: i32,
+    pub RentalDate: NaiveDate,
+    pub ReturnDate: Option<NaiveDate>,
+    pub RentalPrice: Decimal,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
+#[diesel(table_name = crate::schema::Movies)]
+#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct Movie {
-    pub movie_id: i32,
-    pub title: String,
-    pub director: String,
-    pub starring: String,
-    pub details: Option<String>,
-    pub staffs: Option<String>,
-    pub rental_price: Option<Decimal>,
+    pub MovieID: i32,
+    pub Title: String,
+    pub Director: String,
+    pub Starring: String,
+    pub Details: Option<String>,
+    pub Staffs: Option<String>,
+    pub RentalPrice: Option<Decimal>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
+#[diesel(table_name = crate::schema::MoviesActors)]
+#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct MovieActor {
-    pub movie_id: i32,
-    pub actor_id: i32,
+    pub MovieID: i32,
+    pub ActorID: i32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
+#[diesel(table_name = crate::schema::MoviesDirectors)]
+#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct MovieDirector {
-    pub movie_id: i32,
-    pub director_id: i32,
+    pub MovieID: i32,
+    pub DirectorID: i32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
+#[diesel(table_name = crate::schema::MoviesGenres)]
+#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct MovieGenre {
-    pub movie_id: i32,
-    pub genre_id: i32,
+    pub MovieID: i32,
+    pub GenreID: i32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
+#[diesel(table_name = crate::schema::Reviews)]
+#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct Review {
-    pub review_id: i32,
-    pub user_id: Option<i32>,
-    pub movie_id: Option<i32>,
-    pub rating: Option<Decimal>,
-    pub review_text: Option<String>,
-    pub created_at: Option<NaiveDateTime>,
-    pub updated_at: Option<NaiveDateTime>,
+    pub ReviewID: i32,
+    pub UserID: Option<i32>,
+    pub MovieID: Option<i32>,
+    pub Rating: Option<Decimal>,
+    pub ReviewText: Option<String>,
+    pub CreatedAt: Option<NaiveDateTime>,
+    pub UpdatedAt: Option<NaiveDateTime>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
+#[diesel(table_name = crate::schema::UserWishlist)]
+#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct UserWishlist {
-    pub user_id: i32,
-    pub movie_id: i32,
+    pub UserID: i32,
+    pub MovieID: i32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
+#[diesel(table_name = crate::schema::Users)]
+#[diesel(check_for_backend(diesel::mysql::Mysql))]
 pub struct User {
-    pub user_id: i32,
-    pub username: String,
-    pub password_hash: String,
-    pub email: String,
-    pub date_of_birth: NaiveDate,
-    pub gender_description: Option<String>,
-    pub created_at: Option<NaiveDateTime>,
-    pub updated_at: Option<NaiveDateTime>,
+    pub UserID: i32,
+    pub Username: String,
+    pub PasswordHash: String,
+    pub Email: String,
+    pub DateOfBirth: NaiveDate,
+    pub GenderDescription: Option<String>,
+    pub CreatedAt: Option<NaiveDateTime>,
+    pub UpdatedAt: Option<NaiveDateTime>,
 }
