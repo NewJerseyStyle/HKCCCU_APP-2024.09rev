@@ -94,7 +94,7 @@ async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec
     let results = Movies
         .filter(Title.like(format!("%{}%", name)))
         .select(models::Movie::as_select())
-        .load(&conn)
+        .load(&mut conn)
         .expect("Database query error");
 
     Ok(Json(ApiResponse {
