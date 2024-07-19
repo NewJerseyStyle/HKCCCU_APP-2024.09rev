@@ -8,7 +8,7 @@ rocket = { version = "0.5.1", features = ["json"] }
 diesel = { version = "2.2.0", features = ["mysql", "r2d2", "chrono", "numeric"] }
 dotenvy = "0.15"
 chrono = { version = "0.4.38", features = ["serde"] }
-rust_decimal = { version = "1.35.0", features = ["serde", "std", "diesel"] }
+rust_decimal = { version = "1.35.0", features = ["serde", "std"] }
 serde = { version = "1.0.204", features = ["derive"] }
 validator = { version = "0.18.1", features = ["derive"] }
 bcrypt = "0.15.1"
