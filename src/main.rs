@@ -122,7 +122,8 @@ async fn browse(id: i32, pool: &State<DbPool>) -> Result<Json<ApiResponse<models
     use crate::schema::Movies::dsl::*;
     let movie = Movies
         .filter(MovieID.eq(id))
-        .first::<models::Movie>(conn)
+        .select(models::Movie::as_select())
+        .first(conn)
         .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
             status: "error".to_string(),
             data: None,
