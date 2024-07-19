@@ -1,5 +1,4 @@
 #[macro_use] extern crate rocket;
-// #[macro_use] extern crate diesel;
 use rocket::serde::json::Json;
 use rocket::request::{FromRequest, Outcome, Request};
 use rocket::http::Status;
@@ -98,7 +97,7 @@ async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec
     let results = Movies
         .filter(Title.like(format!("%{}%", name)))
         .select(models::Movie::as_select())
-        .load(conn)
+        .load::<models::Movie>(conn)
         .map_err(|_| Custom(Status::InternalServerError, Json(ApiResponse {
             status: "error".to_string(),
             data: None,
@@ -110,6 +109,7 @@ async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec
         data: Some(results),
         message: None,
     }))
+
 }
 
 #[get("/browse/<id>")]

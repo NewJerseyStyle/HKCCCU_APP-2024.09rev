@@ -46,7 +46,6 @@ pub struct MovieRentalRecord {
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::Movies)]
-#[diesel(deserialize)]
 pub struct Movie {
     pub MovieID: i32,
     pub Title: String,
