@@ -10,6 +10,10 @@ use diesel::row::NamedRow;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Serialize, Deserialize, Clone, FromSqlRow, AsExpression)]
+#[diesel(sql_type = Numeric)]
+pub struct SqlDecimal(pub Decimal);
+
 // impl FromSql<diesel::sql_types::Numeric, Mysql> for SqlDecimal {
 //     fn from_sql(bytes: Option<&[u8]>) -> diesel::deserialize::Result<Self> {
 //         let bytes = not_none!(bytes);
@@ -18,11 +22,6 @@ use serde::{Deserialize, Serialize};
 //         Ok(SqlDecimal(decimal))
 //     }
 // }
-
-#[derive(Debug, Serialize, Deserialize, Clone, FromSqlRow, AsExpression)]
-#[diesel(sql_type = Numeric)]
-pub struct SqlDecimal(pub Decimal);
-
 impl FromSql<Numeric, Mysql> for SqlDecimal {
     fn from_sql(value: MysqlValue) -> diesel::deserialize::Result<Self> {
         let decimal = Decimal::from_sql(value)?;
@@ -32,7 +31,10 @@ impl FromSql<Numeric, Mysql> for SqlDecimal {
 
 impl ToSql<Numeric, Mysql> for SqlDecimal {
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Mysql>) -> diesel::serialize::Result {
-        self.0.to_sql(out)
+        // Convert Decimal to a format that can be serialized to SQL
+        let bytes = self.0.serialize_to_bytes()?;
+        out.write_all(&bytes)?;
+        Ok(())
     }
 }
 
