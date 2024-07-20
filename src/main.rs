@@ -47,6 +47,11 @@ async fn serve_search() -> Result<NamedFile, std::io::Error> {
     NamedFile::open("htdocs/search.html").await
 }
 
+#[get("/upload")]
+async fn serve_search() -> Result<NamedFile, std::io::Error> {
+    NamedFile::open("htdocs/add-item.html").await
+}
+
 
 #[launch]
 fn rocket() -> _ {
