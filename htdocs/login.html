@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login and Registration Page</title>
+    <style>
+        body {
+            background-image: url('https://via.placeholder.com/600x800');
+            background-size: cover;
+            background-position: center;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+        }
+        #btm-grid {
+            padding: 0;
+            margin: 0;
+            display: grid;
+            width: calc(95% - 20px);
+            position: fixed;
+            left: calc(5%/2);
+            bottom: 1em;
+        }
+        #show-login {
+            background-color: rgb(13, 88, 169);
+        }
+        #show-register {
+            background-color: rgb(37, 115, 55);
+        }
+        .content {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .content button {
+            width: 100%;
+            border: none;
+            padding: 10px 20px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+        .login-container, .register-container {
+            display: none;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            z-index: 2;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .form-container h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+        .form-container label {
+            display: block;
+            text-align: left;
+            margin-bottom: 5px;
+            font-size: 18px;
+        }
+        .form-container input[type="text"],
+        .form-container input[type="password"],
+        .form-container input[type="email"],
+        .form-container input[type="date"] {
+            width: calc(100% - 10px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .form-container a {
+            display: block;
+            margin-bottom: 20px;
+            color: #007bff;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #218838;
+        }
+        .form-container .gender-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .form-container .gender-buttons button {
+            flex: 1;
+            margin: 0 5px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .form-container .gender-buttons button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="content">
+        <div id="btm-grid">
+            <button id="show-login">Login</button>
+            <button id="show-register">Register</button>
+        </div>
+    </div>
+    <div class="overlay"></div>
+
+    <div class="login-container form-container">
+        <h2>Login</h2>
+        <form>
+            <label for="login-user-id">User ID:</label>
+            <input type="text" id="login-user-id" name="login-user-id" placeholder="Your User ID">
+            <label for="login-password">Password:</label>
+            <input type="password" id="login-password" name="login-password" placeholder="Your Password">
+            <a href="#">Forgot your password?</a>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <div class="register-container form-container">
+        <h2>Account Registration</h2>
+        <form>
+            <label for="register-user-id">User ID:</label>
+            <input type="text" id="register-user-id" name="register-user-id" placeholder="Your User ID here">
+            
+            <label for="register-password">Password:</label>
+            <input type="password" id="register-password" name="register-password" placeholder="Your Password">
+            
+            <label for="register-reenter-password">Re-enter Password:</label>
+            <input type="password" id="register-reenter-password" name="register-reenter-password" placeholder="Re-enter Password">
+            
+            <label for="register-email">Email:</label>
+            <input type="email" id="register-email" name="register-email" placeholder="Email Address">
+            
+            <label for="register-gender">Gender:</label>
+            <div class="gender-buttons">
+                <button type="button" id="gender-male">Male</button>
+                <button type="button" id="gender-female">Female</button>
+                <button type="button" id="gender-others">Others</button>
+            </div>
+            
+            <label for="register-dob">Date of Birth:</label>
+            <input type="date" id="register-dob" name="register-dob">
+            
+            <button type="submit">Register</button>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Show overlay and login form
+            $('#show-login').click(function() {
+                $('.overlay, .login-container').fadeIn();
+            });
+
+            // Show overlay and register form
+            $('#show-register').click(function() {
+                $('.overlay, .register-container').fadeIn();
+            });
+
+            // Hide overlay and forms when clicking outside of the forms
+            $('.overlay').click(function() {
+                $('.overlay, .login-container, .register-container').fadeOut();
+            });
+
+            // Prevent closing when clicking inside the forms
+            $('.login-container, .register-container').click(function(event) {
+                event.stopPropagation();
+            });
+
+            // Handle gender button clicks
+            $('.gender-buttons button').click(function() {
+                $('.gender-buttons button').removeClass('selected');
+                $(this).addClass('selected');
+            });
+        });
+    </script>
+
+    <style>
+        .gender-buttons .selected {
+            background-color: #0056b3;
+        }
+    </style>
+
+</body>
+</html>
