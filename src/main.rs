@@ -87,21 +87,20 @@ struct ApiResponse<T> {
 }
 
 #[get("/search/<name>")]
-async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec<models::Movie>>>, Custom<Json<ApiResponse<()>>>> {
+async fn search(name: &str, pool: &State<DbPool>) -> Result<Json<ApiResponse<Vec<Movie>>>, Custom<Json<ApiResponse<()>>>> {
     let conn = pool.get().expect("Database connection error");
 
+    use crate::models::Movie;
     use crate::schema::Movies::dsl::*;
-    let results = Movies
-        .filter(Title.like(format!("%{}%", name)))
-        .load(&conn)
-        .expect("Database query error");
+    let results = Movies.filter(Title.like(format!("%{}%", name)))
+        .load::<Movie>(&mut conn)
+        .expect("Error loading movies");
 
     Ok(Json(ApiResponse {
         status: "success".to_string(),
         data: Some(results),
         message: None,
     }))
-
 }
 
 #[get("/browse/<id>")]

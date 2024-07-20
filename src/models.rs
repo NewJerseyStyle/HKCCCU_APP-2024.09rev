@@ -1,50 +1,8 @@
-use chrono::{NaiveDate, NaiveDateTime};
+use serde::{Serialize, Deserialize};
 use diesel::prelude::*;
-use rust_decimal::Decimal;
-use serde::{Deserialize, Serialize};
+use crate::schema::{Movies, Users, MovieRentalRecords};
 
-#[derive(Debug, Insertable, Queryable, Selectable, Serialize, Deserialize)]
-#[diesel(table_name = crate::schema::Actors)]
-pub struct Actor {
-    pub ActorID: i32,
-    pub Name: String,
-    pub BirthDate: Option<NaiveDate>,
-    pub Bio: Option<String>,
-    pub CreatedAt: Option<NaiveDateTime>,
-    pub UpdatedAt: Option<NaiveDateTime>,
-}
-
-#[derive(Debug, Insertable, Queryable, Selectable, Serialize, Deserialize)]
-#[diesel(table_name = crate::schema::Directors)]
-pub struct Director {
-    pub DirectorID: i32,
-    pub Name: String,
-    pub BirthDate: Option<NaiveDate>,
-    pub Bio: Option<String>,
-    pub CreatedAt: Option<NaiveDateTime>,
-    pub UpdatedAt: Option<NaiveDateTime>,
-}
-
-#[derive(Debug, Insertable, Queryable, Selectable, Serialize, Deserialize)]
-#[diesel(table_name = crate::schema::Genres)]
-pub struct Genre {
-    pub GenreID: i32,
-    pub GenreName: String,
-}
-
-#[derive(Debug, Insertable, Queryable, Selectable, Serialize, Deserialize)]
-#[diesel(table_name = crate::schema::MovieRentalRecords)]
-pub struct MovieRentalRecord {
-    pub RentalID: i32,
-    pub UserID: i32,
-    pub MovieID: i32,
-    pub RentalDate: NaiveDate,
-    pub ReturnDate: Option<NaiveDate>,
-    pub RentalPrice: Decimal,
-}
-
-#[derive(Debug, Insertable, Queryable, Selectable, Serialize, Deserialize)]
-#[diesel(table_name = crate::schema::Movies)]
+#[derive(Queryable, Serialize, Deserialize)]
 pub struct Movie {
     pub MovieID: i32,
     pub Title: String,
@@ -52,58 +10,43 @@ pub struct Movie {
     pub Starring: String,
     pub Details: Option<String>,
     pub Staffs: Option<String>,
-    pub RentalPrice: Option<Decimal>,
+    pub RentalPrice: Option<diesel::sql_types::Decimal>,
 }
 
-#[derive(Debug, Insertable, Queryable, Selectable, Serialize, Deserialize)]
-#[diesel(table_name = crate::schema::MoviesActors)]
-pub struct MovieActor {
-    pub MovieID: i32,
-    pub ActorID: i32,
-}
-
-#[derive(Debug, Insertable, Queryable, Selectable, Serialize, Deserialize)]
-#[diesel(table_name = crate::schema::MoviesDirectors)]
-pub struct MovieDirector {
-    pub MovieID: i32,
-    pub DirectorID: i32,
-}
-
-#[derive(Debug, Insertable, Queryable, Selectable, Serialize, Deserialize)]
-#[diesel(table_name = crate::schema::MoviesGenres)]
-pub struct MovieGenre {
-    pub MovieID: i32,
-    pub GenreID: i32,
-}
-
-#[derive(Debug, Insertable, Queryable, Selectable, Serialize, Deserialize)]
-#[diesel(table_name = crate::schema::Reviews)]
-pub struct Review {
-    pub ReviewID: i32,
-    pub UserID: Option<i32>,
-    pub MovieID: Option<i32>,
-    pub Rating: Option<Decimal>,
-    pub ReviewText: Option<String>,
-    pub CreatedAt: Option<NaiveDateTime>,
-    pub UpdatedAt: Option<NaiveDateTime>,
-}
-
-#[derive(Debug, Insertable, Queryable, Selectable, Serialize, Deserialize)]
-#[diesel(table_name = crate::schema::UserWishlist)]
-pub struct UserWishlist {
-    pub UserID: i32,
-    pub MovieID: i32,
-}
-
-#[derive(Debug, Insertable, Queryable, Selectable, Serialize, Deserialize)]
-#[diesel(table_name = crate::schema::Users)]
+#[derive(Queryable, Serialize, Deserialize)]
 pub struct User {
     pub UserID: i32,
     pub Username: String,
     pub PasswordHash: String,
     pub Email: String,
-    pub DateOfBirth: NaiveDate,
+    pub DateOfBirth: chrono::NaiveDate,
     pub GenderDescription: Option<String>,
-    pub CreatedAt: Option<NaiveDateTime>,
-    pub UpdatedAt: Option<NaiveDateTime>,
+}
+
+#[derive(Queryable, Serialize, Deserialize)]
+pub struct MovieRentalRecord {
+    pub RentalID: i32,
+    pub UserID: i32,
+    pub MovieID: i32,
+    pub RentalDate: chrono::NaiveDate,
+    pub ReturnDate: Option<chrono::NaiveDate>,
+    pub RentalPrice: diesel::sql_types::Decimal,
+}
+
+impl Movie {
+    pub fn as_select() -> (Movies::MovieID, Movies::Title, Movies::Director, Movies::Starring, Movies::Details, Movies::Staffs, Movies::RentalPrice) {
+        (Movies::MovieID, Movies::Title, Movies::Director, Movies::Starring, Movies::Details, Movies::Staffs, Movies::RentalPrice)
+    }
+}
+
+impl User {
+    pub fn as_select() -> (Users::UserID, Users::Username, Users::PasswordHash, Users::Email, Users::DateOfBirth, Users::GenderDescription) {
+        (Users::UserID, Users::Username, Users::PasswordHash, Users::Email, Users::DateOfBirth, Users::GenderDescription)
+    }
+}
+
+impl MovieRentalRecord {
+    pub fn as_select() -> (MovieRentalRecords::RentalID, MovieRentalRecords::UserID, MovieRentalRecords::MovieID, MovieRentalRecords::RentalDate, MovieRentalRecords::ReturnDate, MovieRentalRecords::RentalPrice) {
+        (MovieRentalRecords::RentalID, MovieRentalRecords::UserID, MovieRentalRecords::MovieID, MovieRentalRecords::RentalDate, MovieRentalRecords::ReturnDate, MovieRentalRecords::RentalPrice)
+    }
 }
