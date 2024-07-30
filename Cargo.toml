@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+duckdb = { version = "1.0.0", features = ["bundled"] }
 rocket = { version = "0.5.1", features = ["json"] }
-duckdb = "1.0.0"

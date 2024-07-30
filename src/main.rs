@@ -2,10 +2,33 @@
 use rocket::fs::NamedFile;
 use rocket::get;
 use rocket::form::Form;
+use rocket::form::FromForm;
 use rocket::serde::json::Json;
 use rocket::State;
 use duckdb::{Connection, Result};
 use std::sync::Mutex;
+
+#[derive(FromForm)]
+pub struct UserLogin {
+    pub username: String,
+    pub password_hash: String,
+    #[field(default = None)]
+    pub email: Option<String>,
+    #[field(default = None)]
+    pub date_of_birth: Option<String>,
+    #[field(default = None)]
+    pub gender_description: Option<String>,
+}
+
+#[derive(FromForm)]
+pub struct MovieRecord {
+    pub title: String,
+    pub director: String,
+    pub starring: String,
+    pub details: String,
+    pub staffs: String,
+    pub rental_price: f64,
+}
 
 struct AppState {
     conn: Mutex<Connection>,
@@ -15,14 +38,12 @@ fn initialize_db(conn: &Connection) {
     let sql = r#"
     -- Users table
     CREATE TABLE IF NOT EXISTS Users (
-        UserID INTEGER PRIMARY KEY AUTOINCREMENT,
-        Username VARCHAR(50) NOT NULL UNIQUE,
-        PasswordHash VARCHAR(255) NOT NULL,
-        Email VARCHAR(100) NOT NULL UNIQUE,
-        DateOfBirth DATE NOT NULL,
-        GenderDescription VARCHAR(50),
-        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        UserID INTEGER PRIMARY KEY,
+        Username TEXT NOT NULL UNIQUE,
+        PasswordHash TEXT NOT NULL,
+        Email TEXT,
+        DateOfBirth TEXT,
+        GenderDescription TEXT
     );
 
     -- Movies table
@@ -156,7 +177,7 @@ fn add_item(item: Form<MovieRecord>, state: &State<AppState>) -> String {
     let conn = state.conn.lock().unwrap();
     conn.execute(
         "INSERT INTO Movies (Title, Director, Starring, Details, Staffs, RentalPrice) VALUES (?, ?, ?, ?, ?, ?)",
-        &[&item.title, &item.director, &item.starring, &item.details, &item.staffs, &item.rental_price],
+        &[&item.title, &item.director, &item.starring, &item.details, &item.staffs, &item.rental_price.to_string()],
     ).unwrap();
     format!("Added movie: {}", item.title)
 }
@@ -166,7 +187,13 @@ fn register(login: Form<UserLogin>, state: &State<AppState>) -> String {
     let conn = state.conn.lock().unwrap();
     conn.execute(
         "INSERT INTO Users (Username, PasswordHash, Email, DateOfBirth, GenderDescription) VALUES (?, ?, ?, ?, ?)",
-        &[&login.username, &login.password_hash, &login.email, &login.date_of_birth, &login.gender_description],
+        &[
+            &login.username,
+            &login.password_hash,
+            &login.email.as_deref().unwrap_or("").to_string(),
+            &login.date_of_birth.as_deref().unwrap_or("").to_string(),
+            &login.gender_description.as_deref().unwrap_or("").to_string(),
+        ],
     ).unwrap();
     format!("Registered user: {}", login.username)
 }
