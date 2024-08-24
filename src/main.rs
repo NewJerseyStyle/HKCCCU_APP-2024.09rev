@@ -3,7 +3,6 @@ use rocket::fs::NamedFile;
 use rocket::get;
 use rocket::form::Form;
 use rocket::form::FromForm;
-use rocket::serde::json::Json;
 use rocket::State;
 use duckdb::{Connection, Result};
 use std::sync::Mutex;
@@ -39,16 +38,16 @@ fn initialize_db(conn: &Connection) {
     -- Users table
     CREATE TABLE IF NOT EXISTS Users (
         UserID INTEGER PRIMARY KEY,
-        Username TEXT NOT NULL UNIQUE,
-        PasswordHash TEXT NOT NULL,
-        Email TEXT,
-        DateOfBirth TEXT,
-        GenderDescription TEXT
+        Username VARCHAR NOT NULL UNIQUE,
+        PasswordHash VARCHAR NOT NULL,
+        Email VARCHAR,
+        DateOfBirth VARCHAR,
+        GenderDescription VARCHAR
     );
 
     -- Movies table
     CREATE TABLE IF NOT EXISTS Movies (
-        MovieID INTEGER PRIMARY KEY AUTOINCREMENT,
+        MovieID INTEGER PRIMARY KEY,
         Title VARCHAR(255) NOT NULL,
         Director VARCHAR(255) NOT NULL,
         Starring TEXT NOT NULL,
@@ -59,7 +58,7 @@ fn initialize_db(conn: &Connection) {
 
     -- Genres table
     CREATE TABLE IF NOT EXISTS Genres (
-        GenreID INTEGER PRIMARY KEY AUTOINCREMENT,
+        GenreID INTEGER PRIMARY KEY,
         GenreName VARCHAR(50) NOT NULL UNIQUE
     );
 
@@ -83,7 +82,7 @@ fn initialize_db(conn: &Connection) {
 
     -- Actors table
     CREATE TABLE IF NOT EXISTS Actors (
-        ActorID INTEGER PRIMARY KEY AUTOINCREMENT,
+        ActorID INTEGER PRIMARY KEY,
         Name VARCHAR(255) NOT NULL,
         BirthDate DATE,
         Bio TEXT,
@@ -93,7 +92,7 @@ fn initialize_db(conn: &Connection) {
 
     -- Directors table
     CREATE TABLE IF NOT EXISTS Directors (
-        DirectorID INTEGER PRIMARY KEY AUTOINCREMENT,
+        DirectorID INTEGER PRIMARY KEY,
         Name VARCHAR(255) NOT NULL,
         BirthDate DATE,
         Bio TEXT,
@@ -121,7 +120,7 @@ fn initialize_db(conn: &Connection) {
 
     -- Reviews table
     CREATE TABLE IF NOT EXISTS Reviews (
-        ReviewID INTEGER PRIMARY KEY AUTOINCREMENT,
+        ReviewID INTEGER PRIMARY KEY,
         UserID INTEGER,
         MovieID INTEGER,
         Rating DECIMAL(2,1) CHECK (Rating BETWEEN 0 AND 10),
@@ -133,7 +132,7 @@ fn initialize_db(conn: &Connection) {
     );
 
     CREATE TABLE IF NOT EXISTS MovieRentalRecords (
-        RentalID INTEGER PRIMARY KEY AUTOINCREMENT,
+        RentalID INTEGER PRIMARY KEY,
         UserID INTEGER NOT NULL,
         MovieID INTEGER NOT NULL,
         RentalDate DATE NOT NULL,

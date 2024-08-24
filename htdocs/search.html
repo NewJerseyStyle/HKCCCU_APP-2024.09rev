@@ -24,6 +24,7 @@
             left: 10px;
             top: 10px;
             font-size: 24px;
+            cursor: pointer;
         }
         .search-container {
             padding: 20px;
@@ -50,6 +51,7 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 5px;
             text-align: center;
+            cursor: pointer; /* Add cursor pointer to indicate clickable cards */
         }
         .result-card img {
             width: 100%;
@@ -67,6 +69,8 @@
             background-color: #333;
             color: white;
             padding-top: 20px;
+            z-index: 1000; /* Ensure sidebar stays on top */
+            transition: 0.5s; /* Add transition for smooth sliding */
         }
         .sidebar img {
             width: 100%;
@@ -109,6 +113,7 @@
             right: -100vw;
             z-index: 990;
             background-color: rgba(0, 0, 0, 0.4);
+            transition: 0.5s; /* Add transition for smooth fading */
         }
         .item-card {
             background-color: #a9a9a9;
@@ -188,6 +193,7 @@
             display: none;
             position: fixed;
             top: 0;
+            transition: 0.5s; /* Add transition for smooth fading */
         }
     </style>
 </head>
@@ -220,41 +226,20 @@
         </select>
     </div>
 
-    <div class="results">
-        <div class="result-card">
-            <img src="https://via.placeholder.com/150" alt="Movie Poster">
-            <h4>Star Wars A New Hope</h4>
-            <p>Science Fiction</p>
-            <p>1977</p>
-            <span>HKD $20</span>
-        </div>
-        <div class="result-card">
-            <img src="https://via.placeholder.com/150" alt="Movie Poster">
-            <h4>Blade Runner</h4>
-            <p>Science Fiction</p>
-            <p>1982</p>
-            <span>HKD $20</span>
-        </div>
-        <div class="result-card">
-            <img src="https://via.placeholder.com/150" alt="Movie Poster">
-            <h4>Elysium</h4>
-            <p>Science Fiction</p>
-            <p>2013</p>
-            <span>HKD $40</span>
-        </div>
+    <div class="results" id="results">
+        <!-- Movie results will be loaded here -->
     </div>
 
-    <div class="item-back">
-    </div>
+    <div class="item-back" onclick="closeItemCard()"></div>
     <div class="item-card">
-        <img src="https://via.placeholder.com/100x150" alt="Blade Runner">
+        <img src="" alt="Movie Poster">
         <div class="item-details">
-            <h2>Blade Runner</h2>
-            <p><strong>Directed by:</strong> Ridley Scott</p>
-            <p><strong>Starring:</strong> Harrison Ford</p>
+            <h2>Movie Title</h2>
+            <p><strong>Directed by:</strong> </p>
+            <p><strong>Starring:</strong> </p>
         </div>
         <div class="buttons">
-            <button class="rent-button">Rent now for $20</button>
+            <button class="rent-button">Rent now</button>
             <button class="wishlist-button">+ Add to wishlist</button>
         </div>
         <div class="tabs">
@@ -270,7 +255,6 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        $(document).ready(function() {
         $(document).ready(function() {
             // Function to fetch data from API and update the result cards
             function fetchResults(query = '', category = '') {
@@ -288,7 +272,7 @@
                         // Loop through the response data and create result cards
                         response.data.forEach(function(movie) {
                             const card = `
-                                <div class="result-card">
+                                <div class="result-card" data-movie-id="${movie.id}">
                                     <img src="${movie.poster}" alt="${movie.title}">
                                     <h4>${movie.title}</h4>
                                     <p>${movie.genre}</p>
@@ -301,19 +285,30 @@
 
                         // Attach click event to new result cards
                         $('.result-card').click(function() {
-                            // Populate item card with selected movie details
-                            const movie = response.data[$(this).index()];
-                            $('.item-card img').attr('src', movie.poster);
-                            $('.item-card h2').text(movie.title);
-                            $('.item-card .item-details p').eq(0).html(`<strong>Directed by:</strong> ${movie.director}`);
-                            $('.item-card .item-details p').eq(1).html(`<strong>Starring:</strong> ${movie.stars}`);
-                            $('.item-card .rent-button').text(`Rent now for $${movie.price}`);
-                            $('.item-card .plot').html(`<p><strong>Plot:</strong></p><p>${movie.plot}</p>`);
-
-                            // Show item card and overlay
-                            $('.item-card').fadeIn();
-                            $('.item-back').fadeIn();
+                            const movieId = $(this).data('movie-id');
+                            showMovieDetails(movieId);
                         });
+                    }
+                });
+            }
+
+            // Function to fetch movie details and populate the item card
+            function showMovieDetails(movieId) {
+                $.ajax({
+                    url: `https://api.example.com/movies/${movieId}`, // Replace with your API endpoint
+                    method: 'GET',
+                    success: function(movie) {
+                        // Populate item card with selected movie details
+                        $('.item-card img').attr('src', movie.poster);
+                        $('.item-card h2').text(movie.title);
+                        $('.item-card .item-details p').eq(0).html(`<strong>Directed by:</strong> ${movie.director}`);
+                        $('.item-card .item-details p').eq(1).html(`<strong>Starring:</strong> ${movie.stars}`);
+                        $('.item-card .rent-button').text(`Rent now for $${movie.price}`);
+                        $('.item-card .plot').html(`<p><strong>Plot:</strong></p><p>${movie.plot}</p>`);
+
+                        // Show item card and overlay
+                        $('.item-card').fadeIn();
+                        $('.item-back').fadeIn();
                     }
                 });
             }
@@ -329,15 +324,15 @@
             });
 
             // Hide overlay and item card
-            $('.item-back').click(function() {
+            function closeItemCard() {
                 $('.item-card').fadeOut();
                 $('.item-back').fadeOut();
-            });
+            }
         });
     </script>
 
     <script type="text/javascript">
-         /* Set the width of the side navigation to 250px and the left margin of the page content to 250px and add a black background color to body */
+        /* Set the width of the side navigation to 250px and the left margin of the page content to 250px and add a black background color to body */
         function openNav() {
             document.getElementById("mask").style.right = "0";
             document.getElementById("menu").style.width = "80%";
